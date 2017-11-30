@@ -1,10 +1,11 @@
 <template>
 <div>
     <div class="board">
-        <div class="square" v-for="field in fields">{{ field.value }}</div>
+        <div class="square" v-for="(field, key) in fields" :key="field.id" v-bind:id="field.id" data-key="field.id">
+            <span data-key="key" v-if="field.value != 0" class="puzzle-field-solution">{{field.value}}</span>
+            <span data-key="key" v-else contenteditable="true" class="puzzle-field-empty"></span>    
+        </div>
     </div>
-    
-    
 </div>
 </template>
 
@@ -14,32 +15,27 @@ import { PuzzlesStore } from '../stores/PuzzlesStore.js'
 export default {
   name: 'Board',
   created(){
-    
-     
-      this.assignPuzzleToFields(1);
+      this.selectRandomPuzzle();
       
-
-  },
-  mounted(){
-      this.generateFields().then( ()=>{this.parseSudokuPuzzles()} );
-      
-     
+      this.generateFields();
+      this.assignPuzzleValuesToFields();
   },
   methods: {
-
+    selectRandomPuzzle(){
+        let randomPuzzleId = this.getRandomInt(0,this.puzzles.length);
+        this.activePuzzle = this.puzzles[randomPuzzleId];
+    },
     /**
     * Assign the values of the puzzles to the yet empty fields
     */
-    assignPuzzleToFields(puzzleIndex){
-        console.log(this.fields);
+    assignPuzzleValuesToFields(){
         for(let index = 0; index < this.fields.length; index++){
-          
-            if(this.puzzles[puzzleIndex][index] != 0){
-                this.fields[index].value = this.puzzles[puzzleIndex][index];
-            }
+            this.fields[index].value = this.activePuzzle[index];
         }
-        
     },
+    /**
+    * Calculate necessary data for every field on the Board. No values yet attached.
+    */
     generateFields(){    
         
         for(let i=1;i<=(9*9);i++){
@@ -48,9 +44,8 @@ export default {
             field.colIndex = this.calculateColIndexForField(i);
             field.rowIndex = this.calculateRowIndexForField(i);
             field.regionIndex = this.calculateRegionIndexForField(field.colIndex,field.rowIndex)
-            
-            // @todo: muss ausgelagert werden, da es später mehrere values geben kann.
-            //field.value = this.calculateRandomValueForField(field);
+            field.value = 0;
+            field.id = i-1;
           
             this.fields.push(field);
         }
@@ -119,6 +114,7 @@ export default {
   data () {
     return {
       fields : [],
+      activePuzzle : [],
       puzzles : PuzzlesStore.puzzles
     }
   }
@@ -126,29 +122,56 @@ export default {
 </script>
 
 
-<style scoped>
-.board {
-    width:80%;
-    margin:0 auto;
-    overflow: hidden;
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-}
+<style>
+    .board {
+        width:80%;
+        margin:4vw auto;
+        
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        order:9;
+        
+    }
+
+    .square {
+        background: #6C7A89;
+        cursor: pointer;
+        font-family: "Oswald", sans-serif;
+
+        text-align: center;
+        color: white;
+        border:2px solid white;
+        width: 11.1111111%;
+        box-sizing: border-box;
+        
+        min-width: 6vw;
+        min-height: 6vw;
+        font-size: 6vw;
+        line-height: 6vw;
+   
+    }
     
-.square {
-    background: #6C7A89;
-    cursor: pointer;
-    font-family: "Oswald", sans-serif;
-    font-size: 5vw;
-    line-height: 5vw;
-    text-align: center;
-    color: white;
-    border:2px solid white;
-    width: 11.1111111%;
-    box-sizing: border-box;
-}
-.square:nth-child(3n) {
-   border-right:6px solid white;
-}
+    .square:nth-child(3n) {
+       border-right:10px solid white;
+    }
+    
+    .square:nth-child(n+28):nth-child(-n+36) {
+       border-top:10px solid white;
+    }
+    
+    .square:nth-child(n+55):nth-child(-n+63) {
+       border-top:10px solid white;
+    }
+    
+    [contenteditable]:focus {
+        outline: 0px solid transparent;
+    }
+    
+    .puzzle-field-solution {
+        color:bisque;
+    }
+    .puzzle-field-empty {
+        color:#fff;
+    }    
 </style>

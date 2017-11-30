@@ -6,10 +6,10 @@ export const PuzzlesStore = new Vue({
         puzzles : []
     },
     created() {
-        if ( localStorage.this.storageKeyName ) {   
-          this.articles =  this.getData( this.storageKeyName );
+        if ( localStorage.puzzles ) {   
+          this.puzzles =  this.getData( "puzzles" );
         } else {
-          this.initData();
+          this.parseSudokuPuzzles();
         }
     },
     watch: {
@@ -26,11 +26,11 @@ export const PuzzlesStore = new Vue({
         * every array key contains the 9x9 values for each field ordered by rows
         */
         parseSudokuPuzzles(){
+            
         // parse txt file, extract puzzle from there
           fetch('/static/data/p096_sudoku.txt')
           .then(response =>response.text()).then(text => {
               const allLines = text.split(/\r\n|\n/);
-
               // All the puzzles start with a row called Grid 01, Grid 02...
               const delimiterString = "Grid";
               var delimiterArrayKeys = [];
@@ -48,26 +48,23 @@ export const PuzzlesStore = new Vue({
                   let puzzle = allLines.slice(delimiterArrayKeys[index]+1,delimiterArrayKeys[index+1]);
                   let puzzleString = puzzle.join("");
 
-                  this.puzzles[index] = [];
+                  puzzles[index] = [];
                   for(let start = 0; start < puzzleString.length; start++){
                       let end = start+1;
-                      this.puzzles[index].push(puzzleString.substring(start,end));
+                      puzzles[index].push(puzzleString.substring(start,end));
                   }
               }
+              this.setData( "puzzles", puzzles );
+              this.puzzles = this.getData("puzzles");
+              
 
           });
         },        
         setData( key, data ) {
-          localStorage.setItem( key, JSON.stringify( data ) );
+            localStorage.setItem( key, JSON.stringify( data ) );
         },
         getData( key ) {
            return JSON.parse( localStorage.getItem( key ) );
-        },
-        /**
-        * Load inital Data from Txt file
-        */
-        initData(){
-            
         },
         /**
         * Delete all data, then init Localstorage again
