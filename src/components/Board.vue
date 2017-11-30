@@ -9,13 +9,13 @@
 </template>
 
 <script>
+import { PuzzlesStore } from '../stores/PuzzlesStore.js'
+    
 export default {
   name: 'Board',
   created(){
-      
-      
-      initSudokuPuzzles();
-      //this.initAssignedNumbers();
+    
+     
       this.assignPuzzleToFields(1);
       
 
@@ -26,54 +26,7 @@ export default {
      
   },
   methods: {
-    /**
-    * Parses local txt file with sudoku puzzles from https://projecteuler.net/index.php?section=problems&id=96
-    * every array key contains the 9x9 values for each field ordered by rows
-    */
-    parseSudokuPuzzles(){
-    // parse txt file, extract puzzle from there
-      fetch('/static/data/p096_sudoku.txt')
-      .then(response =>response.text()).then(text => {
-          const allLines = text.split(/\r\n|\n/);
-          
-          // All the puzzles start with a row called Grid 01, Grid 02...
-          const delimiterString = "Grid";
-          var delimiterArrayKeys = [];
-          
-          // get all array keys with delimiter key word
-          for(let i=0;i< allLines.length;i++){
-              if(allLines[i].search(delimiterString) !== -1){
-                  delimiterArrayKeys.push(i);
-              }
-          }
-          
-          // extraxt lines for one puzzle. range of all array elements between key 1 and key 2
-          var puzzles = [];
-          for(let index = 0; index <delimiterArrayKeys.length; index++){
-              let puzzle = allLines.slice(delimiterArrayKeys[index]+1,delimiterArrayKeys[index+1]);
-              let puzzleString = puzzle.join("");
-              
-              this.puzzles[index] = [];
-              for(let start = 0; start < puzzleString.length; start++){
-                  let end = start+1;
-                  this.puzzles[index].push(puzzleString.substring(start,end));
-              }
-          }
-          
-      });
-    },
-    initSudokuPuzzles(){
-        
-    },
-    initAssignedNumbers(){
-        for(let i=1;i<=9;i++){
-            this.assignedNumbers.regions[i] = [];
-            this.assignedNumbers.rows[i] = [];
-            this.assignedNumbers.cols[i] = [];
-            
-            this.allowedNumbers.push(i);
-        }
-    },
+
     /**
     * Assign the values of the puzzles to the yet empty fields
     */
@@ -102,45 +55,7 @@ export default {
             this.fields.push(field);
         }
        
-    },
-    calculateRandomValueForField(field){
-        
-        var randomNumber;
-        
-        /**
-        * get already assigned numbers for region, columns and rows
-        */
-        var notAllowedNumbers = this.assignedNumbers.regions[field.regionIndex].concat(this.assignedNumbers.rows[field.rowIndex], this.assignedNumbers.cols[field.colIndex]);
-        
-        /** 
-        * remove double values
-        */
-        notAllowedNumbers = Array.from(new Set(notAllowedNumbers));
-
-        
-        /**
-        * get array with allowed numbers
-        */
-        var allowedNumbers = this.allowedNumbers;
-        allowedNumbers = allowedNumbers.filter(e => !notAllowedNumbers.includes(e));
-        
-        /**
-        * pick random number from allowed numbers array
-        */
-        var randomArrayKey = this.getRandomInt(0,allowedNumbers.length-1);
-        randomNumber = allowedNumbers[randomArrayKey];
-        
-        if(typeof randomNumber === "undefined"){
-            console.log(allowedNumbers);
-        }
-        
-        this.assignedNumbers.regions[field.regionIndex].push(randomNumber);
-        this.assignedNumbers.rows[field.rowIndex].push(randomNumber);
-        this.assignedNumbers.cols[field.colIndex].push(randomNumber);
-        
-        return randomNumber;
-        
-    },     
+    },    
     calculateColIndexForField(i){
         let colIndex;    
         
@@ -203,14 +118,8 @@ export default {
   },
   data () {
     return {
-      assignedNumbers :  {
-          'regions' : [],
-          'rows' : [],
-          'cols' : []
-      },
-      allowedNumbers : [],
       fields : [],
-      puzzles : []
+      puzzles : PuzzlesStore.puzzles
     }
   }
 }
