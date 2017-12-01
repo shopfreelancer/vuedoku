@@ -1,4 +1,5 @@
 import Vue from 'vue'
+import { EventBus } from '../event-bus.js';
      
 export const PuzzlesFileParser = new Vue({
     data: {
@@ -37,9 +38,14 @@ export const PuzzlesFileParser = new Vue({
                   var puzzleString = singlePuzzleArray.join("");
     
                   this.puzzles[index] = [];
-                  this.puzzles[index].push(puzzleString);
+                  
+                  for(let start = 0; start < puzzleString.length; start++){
+                      let end = start+1;
+                      this.puzzles[index].push(parseInt(puzzleString.substring(start,end)));
+                  }
                 
             }
+            EventBus.$emit("puzzleDataParsed");
         },
         /**
         *  All the puzzles start with a row called Grid 01, Grid 02...
@@ -55,7 +61,7 @@ export const PuzzlesFileParser = new Vue({
 
         getPuzzles(){
             //this.parseSudokuPuzzles();
-            return this.puzzles
+            return JSON.parse(JSON.stringify(this.puzzles));
         }
     }
 })

@@ -1,5 +1,6 @@
 import Vue from 'vue'
 import {PuzzlesFileParser} from "./PuzzlesFileParser.js"
+import { EventBus } from '../event-bus.js';
      
 export const PuzzlesStore = new Vue({
     data: {
@@ -7,17 +8,24 @@ export const PuzzlesStore = new Vue({
         puzzles : []
     },
     created() {
-        console.log(PuzzlesFileParser.puzzles);
+        localStorage.clear();
         if (localStorage.puzzles) {   
           this.puzzles =  this.getData("puzzles");
         } else {
-            PuzzlesFileParser.getPuzzles()
-            this.setData("puzzles", PuzzlesFileParser.puzzles);
-            this.puzzles = this.getData("puzzles");
+            
+            var self = this;
+            
+            EventBus.$on("puzzleDataParsed", function (e) {
+                var puzzles = PuzzlesFileParser.getPuzzles()         
+                self.setData("puzzles", puzzles);
+                self.puzzles = self.getData("puzzles");
+                EventBus.$emit("puzzleStoreReady");
+            });
+       
         }
     },
     watch: {
-        articles: {
+        puzzles: {
           handler: function () {
             this.setData( this.storageKeyName , this.puzzles );
           },

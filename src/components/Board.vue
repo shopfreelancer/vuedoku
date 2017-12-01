@@ -11,16 +11,23 @@
 
 <script>
 import { PuzzlesStore } from '../stores/PuzzlesStore.js'
+import { EventBus } from '../event-bus.js';
     
 // http://norvig.com/sudoku.html
 export default {
   name: 'Board',
   created(){
-      this.initPeerMatrix();
-      this.selectRandomPuzzle();
+      var self = this;
+      self.initPeerMatrix();
       
-      this.generateFields();
-      this.assignPuzzleValuesToFields();
+        EventBus.$on("puzzleStoreReady", function (e) {
+            self.puzzles = PuzzlesStore.puzzles,
+            self.selectRandomPuzzle();
+
+            self.generateFields();
+            self.assignPuzzleValuesToFields();
+          });
+
   },
   methods: {
     initPeerMatrix(){
@@ -83,7 +90,7 @@ export default {
             let classNameWithoutErrorClass = parentEl.className.substr(0,parentEl.className.search(errorClass));
             parentEl.className = classNameWithoutErrorClass;
     },
-    selectRandomPuzzle(){
+    selectRandomPuzzle(){    
         let randomPuzzleId = this.getRandomInt(0,this.puzzles.length);
         this.activePuzzle = this.puzzles[randomPuzzleId];
     },
@@ -224,7 +231,7 @@ export default {
     return {
       fields : [],
       activePuzzle : [],
-      puzzles : PuzzlesStore.puzzles,
+      puzzles : [],
       peerMatrix : {
           'rows' : [],
           'cols' : [],
