@@ -1,6 +1,6 @@
 import Vue from 'vue'
 import {PuzzlesFileParser} from "./PuzzlesFileParser.js"
-import { EventBus } from '../event-bus.js';
+import {EventBus} from '../event-bus.js';
      
 export const PuzzlesStore = new Vue({
     data: {
@@ -8,9 +8,11 @@ export const PuzzlesStore = new Vue({
         puzzles : []
     },
     created() {
-        localStorage.clear();
+        
         if (localStorage.puzzles) {   
-          this.puzzles =  this.getData("puzzles");
+            this.puzzles =  this.getData("puzzles");
+            setTimeout(function(){EventBus.$emit("puzzleStoreReady")},300);
+            
         } else {
             
             var self = this;

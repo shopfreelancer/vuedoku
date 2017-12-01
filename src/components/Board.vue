@@ -10,8 +10,8 @@
 </template>
 
 <script>
-import { PuzzlesStore } from '../stores/PuzzlesStore.js'
-import { EventBus } from '../event-bus.js';
+import {PuzzlesStore} from '../stores/PuzzlesStore.js'
+import {EventBus} from '../event-bus.js';
     
 // http://norvig.com/sudoku.html
 export default {
@@ -23,7 +23,6 @@ export default {
         EventBus.$on("puzzleStoreReady", function (e) {
             self.puzzles = PuzzlesStore.puzzles,
             self.selectRandomPuzzle();
-
             self.generateFields();
             self.assignPuzzleValuesToFields();
           });
@@ -37,6 +36,24 @@ export default {
             this.peerMatrix.regions[i] = [];
         }
     },
+    numberExistInRow(field,number){
+        if(this.peerMatrix.rows[field.rowIndex].includes(number)){
+            return true;
+        }
+        return false;
+    },
+    numberExistInCol(field,number){
+        if(this.peerMatrix.cols[field.colIndex].includes(number)){
+            return true;
+        }
+        return false;
+    },
+    numberExistInRegion(field,number){
+        if(this.peerMatrix.regions[field.regionIndex].includes(number)){
+            return true;
+        }
+        return false;
+    },       
     validateField(field,event){
         var self = this;
         
@@ -44,7 +61,7 @@ export default {
                     
             let userInput = parseInt(event.target.value);
             
-            if(userInput === 2){
+            if(self.numberExistInRow(field,userInput) || self.numberExistInCol(field,userInput) || self.numberExistInRegion(field,userInput)){
                 
                 var errorClass = " has-error";
                 var parentEl = event.target.parentNode;
