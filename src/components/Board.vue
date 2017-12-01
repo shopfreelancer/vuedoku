@@ -12,16 +12,24 @@
 <script>
 import { PuzzlesStore } from '../stores/PuzzlesStore.js'
     
+// http://norvig.com/sudoku.html
 export default {
   name: 'Board',
   created(){
-    
+      this.initPeerMatrix();
       this.selectRandomPuzzle();
       
       this.generateFields();
       this.assignPuzzleValuesToFields();
   },
   methods: {
+    initPeerMatrix(){
+        for(let i = 1;i < 10;i++){
+            this.peerMatrix.rows[i] = [];
+            this.peerMatrix.cols[i] = [];
+            this.peerMatrix.regions[i] = [];
+        }
+    },
     validateField(field,event){
         var self = this;
         
@@ -63,13 +71,13 @@ export default {
         return true;
     },
     attachErrorClassToInputField(event){
-            var errorClass = " has-error";
+            var errorClass = " has-error animated bounce";
             var parentEl = event.target.parentNode;
             
             parentEl.className = parentEl.className + errorClass;
     },
     removeErrorClassFromInputField(event){
-            var errorClass = " has-error";
+            var errorClass = " has-error animated bounce";
             var parentEl = event.target.parentNode;
         
             let classNameWithoutErrorClass = parentEl.className.substr(0,parentEl.className.search(errorClass));
@@ -83,18 +91,65 @@ export default {
     * Assign the values of the puzzles to the yet empty fields
     */
     assignPuzzleValuesToFields(){
+
         for(let index = 0; index < this.fields.length; index++){
-            this.fields[index].value = this.activePuzzle[index];
+            let puzzleNumber = this.activePuzzle[index];
+            
+            /**
+            * Save value in Matrix with the peer siblings of current field
+            */
+            this.peerMatrix.regions[this.fields[index].regionIndex].push(puzzleNumber);
+            this.peerMatrix.rows[this.fields[index].rowIndex].push(puzzleNumber);
+            this.peerMatrix.cols[this.fields[index].colIndex].push(puzzleNumber);
+
+            this.fields[index].value = puzzleNumber;
         }
     },
     /**
     * Calculate necessary data for every field on the Board. No values yet attached.
     */
+  calculateRandomValueForField(field){
+        
+        var randomNumber;
+        
+        /**
+        * get already assigned numbers for region, columns and rows
+        */
+        var notAllowedNumbers = this.assignedNumbers.regions[field.regionIndex].concat(this.assignedNumbers.rows[field.rowIndex], this.assignedNumbers.cols[field.colIndex]);
+        
+        /** 
+        * remove double values
+        */
+        notAllowedNumbers = Array.from(new Set(notAllowedNumbers));
+
+        
+        /**
+        * get array with allowed numbers
+        */
+        var allowedNumbers = this.allowedNumbers;
+        allowedNumbers = allowedNumbers.filter(e => !notAllowedNumbers.includes(e));
+        
+        /**
+        * pick random number from allowed numbers array
+        */
+        var randomArrayKey = this.getRandomInt(0,allowedNumbers.length-1);
+        randomNumber = allowedNumbers[randomArrayKey];
+        
+        if(typeof randomNumber === "undefined"){
+            console.log(allowedNumbers);
+        }
+        
+        this.assignedNumbers.regions[field.regionIndex].push(randomNumber);
+        this.assignedNumbers.rows[field.rowIndex].push(randomNumber);
+        this.assignedNumbers.cols[field.colIndex].push(randomNumber);
+        
+        return randomNumber;
+        
+    },        
     generateFields(){    
         
         for(let i=1;i<=(9*9);i++){
             var field = {};
-            
             field.colIndex = this.calculateColIndexForField(i);
             field.rowIndex = this.calculateRowIndexForField(i);
             field.regionIndex = this.calculateRegionIndexForField(field.colIndex,field.rowIndex)
@@ -104,7 +159,6 @@ export default {
           
             this.fields.push(field);
         }
-       
     },    
     calculateColIndexForField(i){
         let colIndex;    
@@ -170,7 +224,12 @@ export default {
     return {
       fields : [],
       activePuzzle : [],
-      puzzles : PuzzlesStore.puzzles
+      puzzles : PuzzlesStore.puzzles,
+      peerMatrix : {
+          'rows' : [],
+          'cols' : [],
+          'regions' : []  
+      }
     }
   }
 }
