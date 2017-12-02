@@ -3,17 +3,21 @@
     <div id="start" class="container" v-show="activePanel == 'start'">
         <div class="jumbotron animated fadeIn">
             <h1>数独 [Sudoku]</h1>
-            <p>Simple Demo of a Sudoku board realized with <a href="https://vuejs.org/" target="_blank">Vue.js</a>, <a target="_blank" href="https://bootswatch.com/">Bootswatch</a>, <a target="_blank" href="https://daneden.github.io/animate.css/">animate.css</a>. Uses 50 Sudoku Puzzles from <a target="_blank" href="https://projecteuler.net/index.php?section=problems&id=96">Project Euler</a>.
-            If you´re looking for the math to solve 
+            <p>Simple Demo of a Sudoku board realized with <a href="https://vuejs.org/" target="_blank">Vue.js</a>, <a target="_blank" href="https://bootswatch.com/">Bootswatch</a>, <a target="_blank" href="https://daneden.github.io/animate.css/">animate.css</a>. Uses 50 Sudoku Puzzles from <a target="_blank" href="https://projecteuler.net/index.php?section=problems&id=96">Project Euler</a>.</p>
 
-</p>
             <button @click="initGame" class="btn btn-success">Start Random Game</button>
         </div>
     </div>    
     <div id="board" class="board animated fadeIn" v-show="activePanel == 'board'">
-        <div class="square" v-for="(field, key) in fields" :key="field.id" v-bind:id="field.id">
-            <span v-if="field.value != 0" class="puzzle-field-solution">{{field.value}}</span>
-            <input v-model="field.userNumber" v-else type="number" maxlength="1" min="1" max="9" step="1" v-bind:timeout="field.timeout" @input="validateField(field,$event)" class="puzzle-field-empty">    
+        <div id="squareWrap">
+            <div class="square" v-for="(field, key) in fields" :key="field.id" v-bind:id="field.id">
+                <span v-if="field.value != 0" class="puzzle-field-solution">{{field.value}}</span>
+                <input v-model="field.userNumber" v-else type="number" maxlength="1" min="1" max="9" step="1" v-bind:timeout="field.timeout" @input="validateField(field,$event)" class="puzzle-field-empty">    
+            </div>
+        </div>
+        <div id="badgeWrap">
+            <span class="badge badge-light">Puzzle {{ activePuzzleId }}</span>
+            <span class="badge badge-dark" @click="saveGame">Save Game</span>
         </div>
     </div>
 </div>
@@ -21,16 +25,14 @@
 
 <script>
 import {PuzzlesStore} from '../stores/PuzzlesStore.js'
+import {FieldsStore} from '../stores/FieldsStore.js'
 import {EventBus} from '../event-bus.js';
     
 // http://norvig.com/sudoku.html
 export default {
   name: 'Board',
   created(){
-      var self = this;
-      
-      self.initPeerMatrix();
-      self.generateFields();
+      this.initPeerMatrix();
   },
   methods: {
     initGame(event){
@@ -38,7 +40,12 @@ export default {
         this.assignPuzzleValuesToFields();
         this.activePanel = "board";
         
-    },  
+    },
+    saveGame(){
+        // get all, fields. save to localstorage.
+        let data = [this.fields];
+        localStorage.setItem( "savedGame", JSON.stringify( data ) );
+    },
     initPeerMatrix(){
         for(let i = 1;i < 10;i++){
             this.peerMatrix.rows[i] = [];
@@ -138,86 +145,12 @@ export default {
 
             this.fields[index].value = puzzleNumber;
         }
-    },      
-    generateFields(){    
-        
-        for(let i=1;i<=(9*9);i++){
-            var field = {};
-            field.colIndex = this.calculateColIndexForField(i);
-            field.rowIndex = this.calculateRowIndexForField(i);
-            field.regionIndex = this.calculateRegionIndexForField(field.colIndex,field.rowIndex)
-            field.value = 0;
-            field.id = i-1;
-            field.timeout = 0;
-            field.userNumber = "";
-          
-            this.fields.push(field);
-        }
-    },    
-    calculateColIndexForField(i){
-        let colIndex;    
-        
-        if(i%9 === 0){
-            colIndex = 9;
-        } else {
-            colIndex = i - (Math.floor(i/9)*9)
-        }
-        
-        return colIndex;
-    },
-    calculateRowIndexForField(i){
-        let rowIndex;    
-        
-        if(i%9 === 0){
-            rowIndex = i / 9;
-        } else {
-            rowIndex = Math.floor(i/9) +1;
-        }
-
-        return rowIndex;
-    },
-    calculateRegionIndexForField(colIndex,rowIndex){   
-        
-        const increaseNumber = 3;
-        var rowIndexMin = 0;
-        var rowIndexMax = 3
-        
-        var colIndexMin = 0;
-        var colIndexMax = 3;
-        
-        for(var regionIndex = 1; regionIndex < 10; regionIndex++){
-            
-            if ((colIndex > colIndexMin && colIndex <= colIndexMax) && (rowIndex > rowIndexMin && rowIndex <= rowIndexMax)){
-                return regionIndex;
-            }
-            
-            // increase every third step
-            if(regionIndex%3 == 0){
-                rowIndexMin = rowIndexMin + increaseNumber;
-                rowIndexMax = rowIndexMax + increaseNumber;
-            }
-
-            // increase every step 1-9, then reset
-            if(regionIndex%3 == 0){
-                colIndexMin = 0;
-                colIndexMax = 3;
-            } else {
-                colIndexMin = colIndexMin + increaseNumber;
-                colIndexMax = colIndexMax + increaseNumber;
-            }
-            
-        }
-       
-        return regionIndex;
-    },      
-    getRandomInt(min, max) {
-        return Math.floor(Math.random() * (max - min + 1)) + min;
-    }
+    },  
   },
   data () {
     return {
       activePanel : "start",
-      fields : [],
+      fields : FieldsStore.fields,
       activePuzzleId : "",  
       activePuzzle : [],
       peerMatrix : {
@@ -232,19 +165,23 @@ export default {
 
 
 <style>
-    .board {
+    #board {
         width:80%;
         margin:4vw auto;
+        
+    }
+    
+    #squareWrap {
+        background-color:#fff;
         display: flex;
         flex-direction: row;
         flex-wrap: wrap;
         order:9;
-    }
+    } 
 
     .square {
         background: #6C7A89;
         cursor: pointer;
-       
         text-align: center;
         color: white;
         border:2px solid white;
@@ -267,11 +204,11 @@ export default {
     }
     
     .square:nth-child(n+28):nth-child(-n+36) {
-       border-top:10px solid white;
+        margin-top:10px;
     }
     
     .square:nth-child(n+55):nth-child(-n+63) {
-       border-top:10px solid white;
+       margin-top:10px;
     }
     
     [contenteditable]:focus {
