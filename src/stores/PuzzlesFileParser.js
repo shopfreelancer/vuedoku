@@ -60,7 +60,6 @@ export const PuzzlesFileParser = new Vue({
         },
 
         getPuzzles(){
-            //this.parseSudokuPuzzles();
             return JSON.parse(JSON.stringify(this.puzzles));
         }
     }

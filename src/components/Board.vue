@@ -1,9 +1,19 @@
 <template>
 <div>
-    <div class="board">
+    <div id="start" class="container" v-show="activePanel == 'start'">
+        <div class="jumbotron animated fadeIn">
+            <h1>数独 [Sudoku]</h1>
+            <p>Simple Demo of a Sudoku board realized with <a href="https://vuejs.org/" target="_blank">Vue.js</a>, <a target="_blank" href="https://bootswatch.com/">Bootswatch</a>, <a target="_blank" href="https://daneden.github.io/animate.css/">animate.css</a>. Uses 50 Sudoku Puzzles from <a target="_blank" href="https://projecteuler.net/index.php?section=problems&id=96">Project Euler</a>.
+            If you´re looking for the math to solve 
+
+</p>
+            <button @click="initGame" class="btn btn-success">Start Random Game</button>
+        </div>
+    </div>    
+    <div id="board" class="board animated fadeIn" v-show="activePanel == 'board'">
         <div class="square" v-for="(field, key) in fields" :key="field.id" v-bind:id="field.id">
             <span v-if="field.value != 0" class="puzzle-field-solution">{{field.value}}</span>
-            <input v-else type="number" maxlength="1" min="1" max="9" step="1" v-bind:timeout="field.timeout" @input="validateField(field,$event)" class="puzzle-field-empty">    
+            <input v-model="field.userNumber" v-else type="number" maxlength="1" min="1" max="9" step="1" v-bind:timeout="field.timeout" @input="validateField(field,$event)" class="puzzle-field-empty">    
         </div>
     </div>
 </div>
@@ -18,17 +28,17 @@ export default {
   name: 'Board',
   created(){
       var self = this;
-      self.initPeerMatrix();
       
-        EventBus.$on("puzzleStoreReady", function (e) {
-            self.puzzles = PuzzlesStore.puzzles,
-            self.selectRandomPuzzle();
-            self.generateFields();
-            self.assignPuzzleValuesToFields();
-          });
-
+      self.initPeerMatrix();
+      self.generateFields();
   },
   methods: {
+    initGame(event){
+        this.selectRandomPuzzle();
+        this.assignPuzzleValuesToFields();
+        this.activePanel = "board";
+        
+    },  
     initPeerMatrix(){
         for(let i = 1;i < 10;i++){
             this.peerMatrix.rows[i] = [];
@@ -107,9 +117,9 @@ export default {
             let classNameWithoutErrorClass = parentEl.className.substr(0,parentEl.className.search(errorClass));
             parentEl.className = classNameWithoutErrorClass;
     },
-    selectRandomPuzzle(){    
-        let randomPuzzleId = this.getRandomInt(0,this.puzzles.length);
-        this.activePuzzle = this.puzzles[randomPuzzleId];
+    selectRandomPuzzle(){
+        this.activePuzzleId = PuzzlesStore.getRandomPuzzleId();
+        this.activePuzzle = PuzzlesStore.getPuzzleById(this.activePuzzleId);
     },
     /**
     * Assign the values of the puzzles to the yet empty fields
@@ -128,48 +138,7 @@ export default {
 
             this.fields[index].value = puzzleNumber;
         }
-    },
-    /**
-    * Calculate necessary data for every field on the Board. No values yet attached.
-    */
-  calculateRandomValueForField(field){
-        
-        var randomNumber;
-        
-        /**
-        * get already assigned numbers for region, columns and rows
-        */
-        var notAllowedNumbers = this.assignedNumbers.regions[field.regionIndex].concat(this.assignedNumbers.rows[field.rowIndex], this.assignedNumbers.cols[field.colIndex]);
-        
-        /** 
-        * remove double values
-        */
-        notAllowedNumbers = Array.from(new Set(notAllowedNumbers));
-
-        
-        /**
-        * get array with allowed numbers
-        */
-        var allowedNumbers = this.allowedNumbers;
-        allowedNumbers = allowedNumbers.filter(e => !notAllowedNumbers.includes(e));
-        
-        /**
-        * pick random number from allowed numbers array
-        */
-        var randomArrayKey = this.getRandomInt(0,allowedNumbers.length-1);
-        randomNumber = allowedNumbers[randomArrayKey];
-        
-        if(typeof randomNumber === "undefined"){
-            console.log(allowedNumbers);
-        }
-        
-        this.assignedNumbers.regions[field.regionIndex].push(randomNumber);
-        this.assignedNumbers.rows[field.rowIndex].push(randomNumber);
-        this.assignedNumbers.cols[field.colIndex].push(randomNumber);
-        
-        return randomNumber;
-        
-    },        
+    },      
     generateFields(){    
         
         for(let i=1;i<=(9*9);i++){
@@ -180,6 +149,7 @@ export default {
             field.value = 0;
             field.id = i-1;
             field.timeout = 0;
+            field.userNumber = "";
           
             this.fields.push(field);
         }
@@ -246,9 +216,10 @@ export default {
   },
   data () {
     return {
+      activePanel : "start",
       fields : [],
+      activePuzzleId : "",  
       activePuzzle : [],
-      puzzles : [],
       peerMatrix : {
           'rows' : [],
           'cols' : [],
@@ -264,36 +235,35 @@ export default {
     .board {
         width:80%;
         margin:4vw auto;
-        
         display: flex;
         flex-direction: row;
         flex-wrap: wrap;
         order:9;
-        
     }
 
     .square {
         background: #6C7A89;
         cursor: pointer;
-        font-family: "Oswald", sans-serif;
-
+       
         text-align: center;
         color: white;
         border:2px solid white;
         width: 11.1111111%;
         box-sizing: border-box;
-        
         min-width: 6vw;
         min-height: 6vw;
         font-size: 6vw;
         line-height: 6vw;
-        
         vertical-align:middle;
    
     }
     
     .square:nth-child(3n) {
        border-right:10px solid white;
+    }
+    
+    .square:nth-child(9n) {
+       border-right:2px solid white;
     }
     
     .square:nth-child(n+28):nth-child(-n+36) {
@@ -327,5 +297,9 @@ export default {
     }
     .square.has-error {
         background-color:#ff6300;
+    }
+     
+    #start {
+        margin-top: 100px;
     }
 </style>
