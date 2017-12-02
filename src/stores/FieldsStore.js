@@ -4,13 +4,28 @@ import {RandomIntMixin} from '../mixins/randomInt.js';
 
 export const FieldsStore = new Vue({
     data: {
-        fields : []
+        fields : [],
+        activePuzzle : [],
+        activePuzzleId : "",
+        peerMatrix : {
+          'rows' : [],
+          'cols' : [],
+          'regions' : []  
+        }        
     },
     created() {
-        this.generateFields();
+        this.generateEmptyFields();
+        this.initPeerMatrix();
     },   
-    methods: {       
-        generateFields(){     
+    methods: {
+        buildCompleteFieldsForBoard(activePuzzle){
+            this.activePuzzle = activePuzzle;
+            this.assignPuzzleValuesToFields();
+        },
+        /**
+        * Generate the model of each field. Value attributes are empty as the puzzle data is not available at this time
+        */
+        generateEmptyFields(){     
             for(let i=1;i<=(9*9);i++){
                 var field = {};
                 field.colIndex = this.calculateColIndexForField(i);
@@ -21,12 +36,22 @@ export const FieldsStore = new Vue({
                 field.validation = {};
                 field.validation.timeout = 0;
                 field.validation.hasError = "";
+                field.validation.activeInput = "";
                 field.userNumber = "";
-        
-
+    
                 this.fields.push(field);
             }
-        },    
+        }, 
+        initPeerMatrix(){
+            for(let i = 1;i < 10;i++){
+                this.peerMatrix.rows[i] = [];
+                this.peerMatrix.cols[i] = [];
+                this.peerMatrix.regions[i] = [];
+            }
+        },        
+        /**
+        * Index [1-9] for each col ltr
+        */
         calculateColIndexForField(i){
             let colIndex;    
 
@@ -38,6 +63,9 @@ export const FieldsStore = new Vue({
 
             return colIndex;
         },
+        /**
+        * Index [1-9] for each row top to bottom
+        */        
         calculateRowIndexForField(i){
             let rowIndex;    
 
@@ -49,6 +77,9 @@ export const FieldsStore = new Vue({
 
             return rowIndex;
         },
+        /**
+        * Index [1-9] for each region or sector of bord of 3x3 fields
+        */           
         calculateRegionIndexForField(colIndex,rowIndex){   
 
             const increaseNumber = 3;
@@ -80,8 +111,26 @@ export const FieldsStore = new Vue({
                 }
 
             }
-
             return regionIndex;
-        }
+        },
+        /**
+        * Maps the values of the puzzles to the empty fields and creates the peer Matrix for each field
+        */
+        assignPuzzleValuesToFields(){
+
+            for(let index = 0; index < this.fields.length; index++){
+                let puzzleNumber = this.activePuzzle[index];
+
+                /**
+                * Save value in Matrix with the peer siblings of current field
+                */
+                this.peerMatrix.regions[this.fields[index].regionIndex].push(puzzleNumber);
+                this.peerMatrix.rows[this.fields[index].rowIndex].push(puzzleNumber);
+                this.peerMatrix.cols[this.fields[index].colIndex].push(puzzleNumber);
+
+                this.fields[index].value = puzzleNumber;
+            }
+        },  
+
     }
 })

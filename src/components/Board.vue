@@ -9,12 +9,24 @@
         </div>
     </div>    
     <div id="board" class="board animated fadeIn" v-show="activePanel == 'board'">
+        
+        <div id="editorWrap">
+            <div id="editorButtonsWrap">
+                <button type="button" class="btn btn-outline-primary">Edit</button>
+                <button type="button" class="btn btn-outline-secondary">Note</button>
+            </div>
+            <div id="numberSelectorWrap">
+                <button class="btn btn-secondary" v-for="number in numbersSelectorPanel">{{number}}</button>
+            </div>
+        </div>
+        
         <div id="squareWrap">
-            <div class="square" v-bind:class="{ 'has-error animated bounce' : field.validation.hasError}" v-for="(field, key) in fields" :key="field.id" v-bind:id="field.id">
+            <div class="square" v-bind:class="{ 'has-error animated bounce' : field.validation.hasError, 'activeField' : field.validation.activeInput}" v-for="(field, key) in fields" :key="field.id" v-bind:id="field.id">
                 <span v-if="field.value != 0" class="puzzle-field-solution">{{field.value}}</span>
                 <input v-model="field.userNumber" v-else type="number" maxlength="1" min="1" max="9" step="1" v-bind:timeout="field.validation.timeout" @input="validateField(field,$event)" class="puzzle-field-empty">    
             </div>
         </div>
+
         <div id="badgeWrap">
             <span class="badge badge-light">Puzzle {{ activePuzzleId }}</span>
             <span class="badge badge-dark" @click="saveGame">Save Game</span>
@@ -27,31 +39,26 @@
 import {PuzzlesStore} from '../stores/PuzzlesStore.js'
 import {FieldsStore} from '../stores/FieldsStore.js'
 import {EventBus} from '../event-bus.js';
-    
-// http://norvig.com/sudoku.html
+
 export default {
   name: 'Board',
   created(){
-      this.initPeerMatrix();
+      this.initNumbersSelectorPanel();
   },
   methods: {
+     initNumbersSelectorPanel(){
+        for(let i = 1;i<10;i++){
+            this.numbersSelectorPanel.push(i);
+        }
+    },
     initGame(event){
         this.selectRandomPuzzle();
-        this.assignPuzzleValuesToFields();
         this.activePanel = "board";
-        
     },
     saveGame(){
         // get all, fields. save to localstorage.
         let data = this.fields;
         localStorage.setItem( "savedGame", JSON.stringify( data ) );
-    },
-    initPeerMatrix(){
-        for(let i = 1;i < 10;i++){
-            this.peerMatrix.rows[i] = [];
-            this.peerMatrix.cols[i] = [];
-            this.peerMatrix.regions[i] = [];
-        }
     },
     numberExistInRow(field,number){
         if(this.peerMatrix.rows[field.rowIndex].includes(number)){
@@ -74,6 +81,8 @@ export default {
     validateField(field,event){
         var self = this;
         
+        field.validation.activeInput = true;
+        
         field.validation.timeout = setTimeout(function () {
                     
             let userInput = parseInt(event.target.value);
@@ -83,7 +92,7 @@ export default {
             } else {
                 field.validation.hasError = false;
             }
-
+        
             if(field.validation.timeout !== "undefined"){
                 clearTimeout(field.validation.timeout);
             }
@@ -91,65 +100,23 @@ export default {
         return;
         
     },
-    hasInputFieldErrorClass(event){
-            var errorClass = " has-error";
-            var parentEl = event.target.parentNode;
-            var hasErrorClass = parentEl.className.search(errorClass);
-            
-            if(hasErrorClass === -1){
-                return false;
-            }
-        return true;
-    },
-    attachErrorClassToInputField(event){
-            var errorClass = " has-error animated bounce";
-            var parentEl = event.target.parentNode;
-            
-            parentEl.className = parentEl.className + errorClass;
-    },
-    removeErrorClassFromInputField(event){
-            var errorClass = " has-error animated bounce";
-            var parentEl = event.target.parentNode;
-        
-            let classNameWithoutErrorClass = parentEl.className.substr(0,parentEl.className.search(errorClass));
-            parentEl.className = classNameWithoutErrorClass;
-    },
     selectRandomPuzzle(){
         this.activePuzzleId = PuzzlesStore.getRandomPuzzleId();
-        this.activePuzzle = PuzzlesStore.getPuzzleById(this.activePuzzleId);
+        let activePuzzle = PuzzlesStore.getPuzzleById(this.activePuzzleId);
+        
+        FieldsStore.buildCompleteFieldsForBoard(activePuzzle);
     },
-    /**
-    * Assign the values of the puzzles to the yet empty fields
-    */
-    assignPuzzleValuesToFields(){
-
-        for(let index = 0; index < this.fields.length; index++){
-            let puzzleNumber = this.activePuzzle[index];
-            
-            /**
-            * Save value in Matrix with the peer siblings of current field
-            */
-            this.peerMatrix.regions[this.fields[index].regionIndex].push(puzzleNumber);
-            this.peerMatrix.rows[this.fields[index].rowIndex].push(puzzleNumber);
-            this.peerMatrix.cols[this.fields[index].colIndex].push(puzzleNumber);
-
-            this.fields[index].value = puzzleNumber;
-        }
-    },  
   },
   data () {
     return {
       activePanel : "start",
+      activePuzzleId : "",
       fields : FieldsStore.fields,
-      activePuzzleId : "",  
-      activePuzzle : [],
-      peerMatrix : {
-          'rows' : [],
-          'cols' : [],
-          'regions' : []  
-      }
+      peerMatrix : FieldsStore.peerMatrix,
+      numbersSelectorPanel : []  
     }
   }
+
 }
 </script>
 
@@ -235,5 +202,15 @@ background-size: 64px 128px
      
     #start {
         margin-top: 100px;
+    }
+    
+    #numberSelectorWrap {
+        margin-bottom:20px;
+    }
+    
+    #editorButtonsWrap {margin-bottom:10px;}
+    
+    .activeField {
+        outline:2px solid #5bc0de;
     }
 </style>
