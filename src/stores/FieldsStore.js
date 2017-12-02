@@ -18,8 +18,11 @@ export const FieldsStore = new Vue({
                 field.regionIndex = this.calculateRegionIndexForField(field.colIndex,field.rowIndex)
                 field.value = 0;
                 field.id = i-1;
-                field.timeout = 0;
+                field.validation = {};
+                field.validation.timeout = 0;
+                field.validation.hasError = "";
                 field.userNumber = "";
+        
 
                 this.fields.push(field);
             }

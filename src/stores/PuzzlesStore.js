@@ -52,14 +52,6 @@ export const PuzzlesStore = new Vue({
                 return false;
             }
             return this.puzzles[id];
-        },        
-        /**
-        * Delete all data, then init localstorage
-        */
-        resetData(){
-            this.articles = [];
-            localStorage.clear();
-            this.initData();
-        }       
+        },     
     }
 })

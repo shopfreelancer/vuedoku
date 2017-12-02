@@ -10,9 +10,9 @@
     </div>    
     <div id="board" class="board animated fadeIn" v-show="activePanel == 'board'">
         <div id="squareWrap">
-            <div class="square" v-for="(field, key) in fields" :key="field.id" v-bind:id="field.id">
+            <div class="square" v-bind:class="{ 'has-error animated bounce' : field.validation.hasError}" v-for="(field, key) in fields" :key="field.id" v-bind:id="field.id">
                 <span v-if="field.value != 0" class="puzzle-field-solution">{{field.value}}</span>
-                <input v-model="field.userNumber" v-else type="number" maxlength="1" min="1" max="9" step="1" v-bind:timeout="field.timeout" @input="validateField(field,$event)" class="puzzle-field-empty">    
+                <input v-model="field.userNumber" v-else type="number" maxlength="1" min="1" max="9" step="1" v-bind:timeout="field.validation.timeout" @input="validateField(field,$event)" class="puzzle-field-empty">    
             </div>
         </div>
         <div id="badgeWrap">
@@ -43,7 +43,7 @@ export default {
     },
     saveGame(){
         // get all, fields. save to localstorage.
-        let data = [this.fields];
+        let data = this.fields;
         localStorage.setItem( "savedGame", JSON.stringify( data ) );
     },
     initPeerMatrix(){
@@ -74,28 +74,18 @@ export default {
     validateField(field,event){
         var self = this;
         
-        field.timeout = setTimeout(function () {
+        field.validation.timeout = setTimeout(function () {
                     
             let userInput = parseInt(event.target.value);
             
             if(self.numberExistInRow(field,userInput) || self.numberExistInCol(field,userInput) || self.numberExistInRegion(field,userInput)){
-                
-                var errorClass = " has-error";
-                var parentEl = event.target.parentNode;
-                var hasErrorClass = parentEl.className.search(errorClass);
- 
-                if(!self.hasInputFieldErrorClass(event)){
-                    self.attachErrorClassToInputField(event);  
-                }
+                field.validation.hasError = true;
             } else {
-            
-                if(self.hasInputFieldErrorClass(event)){
-                    self.removeErrorClassFromInputField(event);  
-                }
+                field.validation.hasError = false;
             }
 
-            if(field.timeout !== "undefined"){
-                clearTimeout(field.timeout);
+            if(field.validation.timeout !== "undefined"){
+                clearTimeout(field.validation.timeout);
             }
             }, 1000);
         return;
@@ -165,10 +155,17 @@ export default {
 
 
 <style>
+    body {
+        background:
+linear-gradient(135deg, #6C7A89 22px, #404b56 22px, #404b56 24px, transparent 24px, transparent 67px, #404b56 67px, #404b56 69px, transparent 69px),
+linear-gradient(225deg, #6C7A89 22px, #404b56 22px, #404b56 24px, transparent 24px, transparent 67px, #404b56 67px, #404b56 69px, transparent 69px)0 64px;
+background-color:#6C7A89;
+background-size: 64px 128px
+    }
+    
     #board {
         width:80%;
         margin:4vw auto;
-        
     }
     
     #squareWrap {
