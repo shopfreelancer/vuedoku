@@ -1,14 +1,6 @@
 <template>
-<div>
-    <div id="start" class="container" v-show="activePanel == 'start'">
-        <div class="jumbotron animated fadeIn">
-            <h1>数独 [Sudoku]</h1>
-            <p>Simple Demo of a Sudoku board realized with <a href="https://vuejs.org/" target="_blank">Vue.js</a>, <a target="_blank" href="https://bootswatch.com/">Bootswatch</a>, <a target="_blank" href="https://daneden.github.io/animate.css/">animate.css</a>. Uses 50 Sudoku Puzzles from <a target="_blank" href="https://projecteuler.net/index.php?section=problems&id=96">Project Euler</a>.</p>
-
-            <button @click="initGame" class="btn btn-success">Start Random Game</button>
-        </div>
-    </div>    
-    <div id="board" class="board animated fadeIn" v-show="activePanel == 'board'">
+<div>  
+    <div id="board" class="board animated fadeIn">
         
         <div id="editorWrap">
             <div id="editorButtonsWrap">
@@ -44,6 +36,7 @@ export default {
   name: 'Board',
   created(){
       this.initNumbersSelectorPanel();
+      this.initGame();
   },
   methods: {
      initNumbersSelectorPanel(){
@@ -53,7 +46,6 @@ export default {
     },
     initGame(event){
         this.selectRandomPuzzle();
-        this.activePanel = "board";
     },
     saveGame(){
         // get all, fields. save to localstorage.
@@ -109,14 +101,12 @@ export default {
   },
   data () {
     return {
-      activePanel : "start",
       activePuzzleId : "",
       fields : FieldsStore.fields,
       peerMatrix : FieldsStore.peerMatrix,
       numbersSelectorPanel : []  
     }
   }
-
 }
 </script>
 
