@@ -14,8 +14,11 @@
         
         <div id="squareWrap">
             <div class="square" v-bind:class="{ 'has-error animated bounce' : field.validation.hasError, 'activeField' : field.validation.activeInput}" v-for="(field, key) in fields" :key="field.id" v-bind:id="field.id">
+                <span v-if="field.solution != 0" class="puzzle-field-solution-computed">{{field.solution}}</span>
+                <span v-if="field.isEmptyField" class="puzzle-field-allowed-values">{{ field.allowedValues.join(',') }}</span>
                 <span v-if="field.value != 0" class="puzzle-field-solution">{{field.value}}</span>
-                <input v-model="field.userNumber" v-else type="number" maxlength="1" min="1" max="9" step="1" v-bind:timeout="field.validation.timeout" @input="validateField(field,$event)" class="puzzle-field-empty">    
+           
+                <input v-else v-model="field.userNumber" type="number" maxlength="1" min="1" max="9" step="1" v-bind:timeout="field.validation.timeout" @input="validateField(field,$event)" class="puzzle-field-empty">
             </div>
         </div>
 
@@ -30,22 +33,23 @@
 <script>
 import {PuzzlesStore} from '../stores/PuzzlesStore.js'
 import {FieldsStore} from '../stores/FieldsStore.js'
-import {EventBus} from '../event-bus.js';
+import {GuessingSolution} from '../stores/GuessingSolution.js'
+    
 
 export default {
   name: 'Board',
   created(){
       this.initNumbersSelectorPanel();
-      this.initGame();
+      //this.startRandomPuzzle();
+      this.buildBoardByPuzzleId(3);
+      
+      GuessingSolution.theGuessingGame();
   },
   methods: {
      initNumbersSelectorPanel(){
         for(let i = 1;i<10;i++){
             this.numbersSelectorPanel.push(i);
         }
-    },
-    initGame(event){
-        this.selectRandomPuzzle();
     },
     saveGame(){
         // get all, fields. save to localstorage.
@@ -92,19 +96,23 @@ export default {
         return;
         
     },
-    selectRandomPuzzle(){
-        this.activePuzzleId = PuzzlesStore.getRandomPuzzleId();
+    startRandomPuzzle(){
+        let randomPuzzleId = PuzzlesStore.getRandomPuzzleId();
+        this.buildBoardByPuzzleId(randomPuzzleId);
+    },
+    buildBoardByPuzzleId(id){
+        this.activePuzzleId = id;
         let activePuzzle = PuzzlesStore.getPuzzleById(this.activePuzzleId);
         
         FieldsStore.buildCompleteFieldsForBoard(activePuzzle);
-    },
+    },      
   },
   data () {
     return {
       activePuzzleId : "",
       fields : FieldsStore.fields,
       peerMatrix : FieldsStore.peerMatrix,
-      numbersSelectorPanel : []  
+      numbersSelectorPanel : [],
     }
   }
 }
@@ -112,16 +120,10 @@ export default {
 
 
 <style>
-    body {
-        background:
-linear-gradient(135deg, #6C7A89 22px, #404b56 22px, #404b56 24px, transparent 24px, transparent 67px, #404b56 67px, #404b56 69px, transparent 69px),
-linear-gradient(225deg, #6C7A89 22px, #404b56 22px, #404b56 24px, transparent 24px, transparent 67px, #404b56 67px, #404b56 69px, transparent 69px)0 64px;
-background-color:#6C7A89;
-background-size: 64px 128px
-    }
-    
+    body {height:100%;}
     #board {
-        width:80%;
+        max-width:80%;
+        height:100vh;
         margin:4vw auto;
     }
     
@@ -141,10 +143,10 @@ background-size: 64px 128px
         border:2px solid white;
         width: 11.1111111%;
         box-sizing: border-box;
-        min-width: 6vw;
-        min-height: 6vw;
-        font-size: 6vw;
-        line-height: 6vw;
+        
+        max-height: calc((100vh - 4vw)/9);
+        font-size: 5vw;
+        line-height: 5vw;
         vertical-align:middle;
    
     }
@@ -203,4 +205,9 @@ background-size: 64px 128px
     .activeField {
         outline:2px solid #5bc0de;
     }
+    
+    /** @todo remove testing **/
+    .puzzle-field-solution-computed {color:aqua;position:absolute;}
+    .square {   position: relative; }
+    .puzzle-field-allowed-values {font-size:10px;}
 </style>

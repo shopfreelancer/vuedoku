@@ -31,13 +31,19 @@ export const FieldsStore = new Vue({
                 field.colIndex = this.calculateColIndexForField(i);
                 field.rowIndex = this.calculateRowIndexForField(i);
                 field.regionIndex = this.calculateRegionIndexForField(field.colIndex,field.rowIndex)
-                field.value = 0;
+                field.value = "";
+                field.isEmptyField = true;
                 field.id = i-1;
                 field.validation = {};
                 field.validation.timeout = 0;
                 field.validation.hasError = "";
                 field.validation.activeInput = "";
                 field.userNumber = "";
+                field.allowedValues = [];
+                field.solution = 0;
+                for(let j=1;j<=(9);j++){
+                    field.allowedValues.push(j);
+                }
     
                 this.fields.push(field);
             }
@@ -119,7 +125,7 @@ export const FieldsStore = new Vue({
         assignPuzzleValuesToFields(){
 
             for(let index = 0; index < this.fields.length; index++){
-                let puzzleNumber = this.activePuzzle[index];
+                let puzzleNumber = parseInt(this.activePuzzle[index]);
 
                 /**
                 * Save value in Matrix with the peer siblings of current field
@@ -128,7 +134,10 @@ export const FieldsStore = new Vue({
                 this.peerMatrix.rows[this.fields[index].rowIndex].push(puzzleNumber);
                 this.peerMatrix.cols[this.fields[index].colIndex].push(puzzleNumber);
 
-                this.fields[index].value = puzzleNumber;
+                if(puzzleNumber !== 0){
+                    this.fields[index].value = puzzleNumber;
+                    this.fields[index].isEmptyField = false;
+                }
             }
         },  
 
