@@ -137,9 +137,13 @@ export const FieldsStore = new Vue({
                 if(puzzleNumber !== 0){
                     this.fields[index].value = puzzleNumber;
                     this.fields[index].isEmptyField = false;
+                    
+                    this.fields[index].allowedValues = [];
+                    this.fields[index].allowedValues.push(puzzleNumber);
+                    this.fields[index].solution = puzzleNumber;
                 }
             }
-        },  
+        },
 
     }
 })

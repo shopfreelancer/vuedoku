@@ -16,7 +16,7 @@ export const GuessingSolution = new Vue({
         
         this.countFieldsToBeGuessed();
         
-        for(var i = 0; i < 5; i++){
+        for(var i = 0; i < 6; i++){
             for(let j = 0; j < self.fields.length; j++){
                 self.guessFieldSolution(self.fields[j])
             }
@@ -72,10 +72,30 @@ export const GuessingSolution = new Vue({
 
         // only for the fields without values from the original puzzle
         if(!field.isEmptyField || field.solution !== 0){
-            return true;
+           // return true;
         }
+        
 
-        self.eliminatePeersSolutionsFromField(field);
+        // if only one number exist we got a solution. delete number from all peers
+        if(field.allowedValues.length === 1){
+               
+                //field.solution = parseInt(field.allowedValues[0]);
+            
+                self.fields.forEach(function(peerField){
+                if(field.id === peerField.id) return true;
+                 
+                // these are the peer fields
+                if(field.rowIndex === peerField.rowIndex || field.colIndex === peerField.colIndex || field.regionIndex === peerField.regionIndex){
+                    var foundValueIndex = peerField.allowedValues.indexOf(field.allowedValues[0]);
+                    if(foundValueIndex > -1){
+                        peerField.allowedValues.splice(foundValueIndex,1);
+                    }
+                }
+                });  
+            
+        }
+        
+        //self.eliminatePeersSolutionsFromField(field);
         
         
         // if there is only one number left the field is solved and has a solution 
@@ -85,39 +105,44 @@ export const GuessingSolution = new Vue({
             return true;
         }
         
-        
-        // allowedValues... pro unit pruefen. if number occurs only once per unit - bingo, solution
-        field.allowedValues.every(function(allowedValue){
+    
+        // allowedValues... if number occurs only once per unit - it is the solution
+        field.allowedValues.forEach(function(allowedValue){
             
-            var foundAllowedValueInPeersCounter = 0;
-            // die nummer kommt in keinem anderen peer mehr vor!!!
-             self.fields.forEach(function(peerField){
+            var foundAllowedValueInPeers = false;
+            // die nummer kommt in keinem anderen peer mehr vor
+            self.fields.every(function(peerField){
                 if(field.id === peerField.id) return true;
                  
                 // peer fields
-                if(field.rowIndex === peerField.rowIndex || field.colIndex === peerField.colIndex || field.regionIndex === peerField.regionIndex){
-                   
-                    if(!peerField.isEmptyField && allowedValue === peerField.value){
-                        foundAllowedValueInPeersCounter++;
-                    } else if(peerField.isEmptyField && peerField.allowedValues.includes(allowedValue)){
-                        console.log("id "+field.id+" allowedValue "+allowedValue+" "+peerField.allowedValues+" p-id: "+peerField.id);
-                        foundAllowedValueInPeersCounter++;
-                        
+                if(
+                    field.rowIndex === peerField.rowIndex 
+                   || field.colIndex === peerField.colIndex 
+                   || field.regionIndex === peerField.regionIndex
+                  ){
+                    if(peerField.allowedValues.includes(allowedValue)){
+                        foundAllowedValueInPeers = true;
+                        return false
                     }
                 }
+                return true;
              });
-            
+
            
             // the allowed value of field is solo, it doesn´t occur in its peers. Solution found.
-            if(foundAllowedValueInPeersCounter === 0){
+            // delete all other allowedValues from field
+            
+            if(foundAllowedValueInPeers === false){
                 field.solution = allowedValue;
                 field.allowedValues = [];
                 field.allowedValues.push(allowedValue);
                 return false;
             }
+           
                  
             return true;
-        });          
+        });    
+        
         
                 
         return true;
