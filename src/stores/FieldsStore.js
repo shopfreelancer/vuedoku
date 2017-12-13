@@ -18,8 +18,9 @@ export const FieldsStore = new Vue({
         this.initPeerMatrix();
     },   
     methods: {
-        buildCompleteFieldsForBoard(activePuzzle){
+        buildCompleteFieldsForBoard(activePuzzle,solution){
             this.activePuzzle = activePuzzle;
+            this.solution = solution;
             this.assignPuzzleValuesToFields();
         },
         /**
@@ -32,18 +33,15 @@ export const FieldsStore = new Vue({
                 field.rowIndex = this.calculateRowIndexForField(i);
                 field.regionIndex = this.calculateRegionIndexForField(field.colIndex,field.rowIndex)
                 field.value = "";
-                field.isEmptyField = true;
+                field.isUserInput = true;
                 field.id = i-1;
                 field.validation = {};
                 field.validation.timeout = 0;
                 field.validation.hasError = "";
                 field.validation.activeInput = "";
                 field.userNumber = "";
-                field.allowedValues = [];
                 field.solution = 0;
-                for(let j=1;j<=(9);j++){
-                    field.allowedValues.push(j);
-                }
+
     
                 this.fields.push(field);
             }
@@ -136,12 +134,10 @@ export const FieldsStore = new Vue({
 
                 if(puzzleNumber !== 0){
                     this.fields[index].value = puzzleNumber;
-                    this.fields[index].isEmptyField = false;
-                    
-                    this.fields[index].allowedValues = [];
-                    this.fields[index].allowedValues.push(puzzleNumber);
-                    this.fields[index].solution = puzzleNumber;
+                    this.fields[index].isUserInput = false;
                 }
+                
+                this.fields[index].solution = this.solution[index];
             }
         },
 

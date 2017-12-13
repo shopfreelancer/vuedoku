@@ -13,7 +13,7 @@ export default {
     components : {Start, Board},
     created: function() {
           var self = this;
-          /**
+         /**
           * Props go to down to children, events go up to parent
           */
           self.$on("activeComponent", function (activeComponent) {

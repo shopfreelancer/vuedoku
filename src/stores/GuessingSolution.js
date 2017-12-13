@@ -14,52 +14,139 @@ export const GuessingSolution = new Vue({
         
         var self = this;
         
-        this.countFieldsToBeGuessed();
+        self.fields.forEach(function(field){
+            self.assignValues(field.id,field.solution)
+        })
         
-        for(var i = 0; i < 6; i++){
-            for(let j = 0; j < self.fields.length; j++){
-                self.guessFieldSolution(self.fields[j])
-            }
-        }
-        
-        if (self.successCounter == self.fieldsToBeGuessed ) {
-            self.boardIsSolved = true;
-        }
+        self.fields.forEach(function(field){
+            self.eliminateUnitValues(field.id,field.solution)
+        })
 
-
-        /**
-        var loopRun = true;
-   
-        do {
-            
-            for(let j = 0; j < self.fields.length; j++){
-                if (self.successCounter == self.fieldsToBeGuessed ) {
-                    loopRun = false;
-                    break;
-                } else {
-                    if(self.guessFieldSolution(self.fields[j]) === false){
-                        loopRun = false;
-                    }
-                }
-            }
-            if (self.successCounter == self.fieldsToBeGuessed ) {
-                    loopRun = false;
-            }
-
-        } while(loopRun === true)
-        */
     
     },
-    /**
-    * The non-empty fields have already a solution / value.
-    * These are the ones we need a number for
-    */
-    countFieldsToBeGuessed(){
-        this.fields.forEach(function(field) {
-            if(field.isEmptyField){
-                self.fieldsToBeGuessed++;
-            }
+    // @todo: can I work with the global fields object or do I need the fiels as params? no idea.
+    assignValues(fieldId,solution){
+        var self = this;
+        
+        // other_values = values[s].replace(d, '')      
+        var foundValueIndex = self.fields[fieldId].allowedValues.indexOf(solution);
+    
+        // all inital fields are down to one solution already. don´t splice them again
+        if(foundValueIndex > -1 && self.fields[fieldId].allowedValues.length > 1){
+            self.fields[fieldId].allowedValues.splice(foundValueIndex,1);
+            
+        }
+        
+        self.eliminate(fieldId,solution);  
+        self.fields[fieldId].allowedValues.forEach(function(allowedValue){
+            //self.eliminate(fieldId,allowedValue);                       
+        })
+        
+        return true;
+    },
+    eliminate(fieldId,solution){
+        var self = this;
+        
+        var foundValueIndex = self.fields[fieldId].allowedValues.indexOf(solution);
+ 
+        // all inital fields are down to one solution already. don´t splice them again
+        
+        // if d not in values[s]:
+        // return values
+        if(foundValueIndex === - 1){
+            return;
+        }
+        
+        // values[s] = values[s].replace(d,'')
+        if(foundValueIndex > 0){
+            self.fields[fieldId].allowedValues.splice(foundValueIndex,1);
+            
+                //console.log("solution: "+solution+ " fieldId: "+fieldId+ " allowed "+self.fields[fieldId].allowedValues+ " found "+foundValueIndex);
+        }
+  
+        // step 1: delete solution from peers
+        
+        //  elif len(values[s]) == 1:
+        //  d2 = values[s]
+        // if not all(eliminate(values, s2, d2) for s2 in peers[s]):
+        if(self.fields[fieldId].allowedValues.length === 1){
+            //console.log(self.fields[fieldId].allowedValues);
+            self.fields[fieldId].solution = self.fields[fieldId].allowedValues[0];
+             
+            self.fields.forEach(function(peerField){
+                if(fieldId === peerField.id) return true;
+                
+                // these are the peer fields
+                if(self.fields[fieldId].rowIndex === peerField.rowIndex || self.fields[fieldId].colIndex === peerField.colIndex || self.fields[fieldId].regionIndex === peerField.regionIndex){
+                    var foundValueIndex = peerField.allowedValues.indexOf(self.fields[fieldId].allowedValues[0]);
+                    
+                    
+                    if(foundValueIndex > -1){
+                        peerField.allowedValues.splice(foundValueIndex,1);
+                    }
+                }
+                });  
+        }
+        
+        // step 2: remove numbers from units
+       // fetch units for field. 3 units with 9 fields
+        // @todo gibt es keine bessere Lösung als immer neue arrays aufzumachen? das nervt hart
+
+        
+        return true;
+    },
+    eliminateUnitValues(fieldId,solution){
+        
+        var self = this;
+        
+        var units = [];
+        units[0] = [];
+        units[1] = [];
+        units[2] = [];
+        
+        self.fields.forEach(function(unitField){
+             if(self.fields[fieldId].rowIndex === unitField.rowIndex){
+                units[0].push(unitField);
+             }
+            
+            if(self.fields[fieldId].colIndex === unitField.colIndex){
+                units[1].push(unitField);
+             }
+            
+            if(self.fields[fieldId].regionIndex === unitField.regionIndex){
+                units[2].push(unitField);
+             }
         });
+  
+
+        // testen, ob Wert in Unit genau einmal gefunden wird.
+        // macht das logisch Sinn? das ist doch eine doppelung von dem, was ich weiter oben schon prüfe.
+        // also ob ein Feld nur einen Wert hat.
+    
+        units.forEach(function(unit){
+
+            var foundFieldIds = [];
+
+            unit.forEach(function(unitField){
+            
+                if(unitField.allowedValues.includes(solution)){
+                    // @todo es wäre schön hier direkt auf das feld zugreifen zu können. naja.
+                    foundFieldIds.push(unitField.id);
+
+                }
+            });
+            // only one logical solution per unit
+            //console.log(foundFieldIds);
+         
+            if(foundFieldIds.length === 1){
+                let updateId = foundFieldIds[0];
+                self.assignValues(updateId,solution);
+                
+            }
+
+        })
+        
+        return true;
     },
     /**
     * Guess solution for one field
@@ -71,6 +158,7 @@ export const GuessingSolution = new Vue({
         var self = this;
 
         // only for the fields without values from the original puzzle
+        
         if(!field.isEmptyField || field.solution !== 0){
            // return true;
         }
@@ -100,12 +188,70 @@ export const GuessingSolution = new Vue({
         
         // if there is only one number left the field is solved and has a solution 
         if(field.allowedValues.length === 1){
-            field.solution = parseInt(field.allowedValues[0]);
+            field.solution = field.allowedValues[0];
             this.successCounter++;
-            return true;
+            //return true;
         }
         
+        
+        // fetch units for field. 3 units with 9 fields
+        // @todo gibt es keine bessere Lösung als immer neue arrays aufzumachen? das nervt hart
+        var units = [];
+        units[0] = [];
+        units[1] = [];
+        units[2] = [];
+        
+        self.fields.forEach(function(peerField){
+             if(field.rowIndex === peerField.rowIndex){
+                units[0].push(peerField);
+             }
+            
+            if(field.colIndex === peerField.colIndex){
+                units[1].push(peerField);
+             }
+            
+            if(field.regionIndex === peerField.regionIndex){
+                units[2].push(peerField);
+             }
+        });
+  
+
+        // testen, ob Wert in Unit genau einmal gefunden wird.
+        // macht das logisch Sinn? das ist doch eine doppelung von dem, was ich weiter oben schon prüfe.
+        // also ob ein Feld nur einen Wert hat.
     
+        units.forEach(function(unit){
+
+  
+            var foundFieldIds = [];
+
+            unit.forEach(function(unitField){
+            
+                if(unitField.allowedValues.includes(field.solution)){
+                    // @todo es wäre schön hier direkt auf das feld zugreifen zu können. naja.
+                    foundFieldIds.push(unitField.id);
+
+                }
+            });
+            // only one logical solution per unit
+            //console.log(foundFieldIds);
+         
+            if(foundFieldIds.length === 1){
+                let updateId = foundFieldIds[0];
+                self.fields[updateId].allowedValues = [];
+                self.fields[updateId].allowedValues.push(field.solution);
+                self.fields[updateId].solution = field.solution;
+            }
+          
+
+        })
+       
+   
+        
+        
+        
+        
+        /*
         // allowedValues... if number occurs only once per unit - it is the solution
         field.allowedValues.forEach(function(allowedValue){
             
@@ -142,7 +288,7 @@ export const GuessingSolution = new Vue({
                  
             return true;
         });    
-        
+        */
         
                 
         return true;
@@ -226,7 +372,6 @@ export const GuessingSolution = new Vue({
     return {
       fields : FieldsStore.fields,
       successCounter : 0,
-      fieldsToBeGuessed : 0,
       boardIsSolved : false,
     }
   }

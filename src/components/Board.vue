@@ -1,6 +1,6 @@
 <template>
 <div>  
-    <div id="board" class="board animated fadeIn">
+    <div id="board" class="board animated fadeIn">{{clock}}
         
         <div id="editorWrap">
             <div id="editorButtonsWrap">
@@ -15,8 +15,7 @@
         <div id="squareWrap">
             <div class="square" v-bind:class="{ 'has-error animated bounce' : field.validation.hasError, 'activeField' : field.validation.activeInput}" v-for="(field, key) in fields" :key="field.id" v-bind:id="field.id">
                 <span v-if="field.solution != 0" class="puzzle-field-solution-computed">{{field.solution}}</span>
-                <span v-if="field.isEmptyField" class="puzzle-field-allowed-values">{{ field.allowedValues.join(',') }}</span>
-                <span v-if="field.value != 0" class="puzzle-field-solution">{{field.value}}</span>
+                <span v-if="field.value != 0" class="puzzle-field-value">{{field.value}}</span>
            
                 <input v-else v-model="field.userNumber" type="number" maxlength="1" min="1" max="9" step="1" v-bind:timeout="field.validation.timeout" @input="validateField(field,$event)" class="puzzle-field-empty">
             </div>
@@ -33,19 +32,36 @@
 <script>
 import {PuzzlesStore} from '../stores/PuzzlesStore.js'
 import {FieldsStore} from '../stores/FieldsStore.js'
-import {GuessingSolution} from '../stores/GuessingSolution.js'
-    
+import {SudokuSolving} from '../helper/sudoku.js'    
 
 export default {
   name: 'Board',
   created(){
+      var self = this;
       this.initNumbersSelectorPanel();
       //this.startRandomPuzzle();
-      this.buildBoardByPuzzleId(3);
+      this.buildBoardByPuzzleId(7);
       
-      GuessingSolution.theGuessingGame();
+      setInterval(self.setClock, 1000);
   },
   methods: {
+     setClock(){
+         if(this.clock.seconds < 60){
+             this.clock.seconds += 1;
+         } else {
+             this.clock.seconds = 0;
+             this.clock.minutes += 1;
+         }
+         
+         if(this.clock.minutes > 59){
+             this.clock.hours += 1;
+             this.clock.minutes = 0;
+         }
+         
+   
+   
+         
+     },
      initNumbersSelectorPanel(){
         for(let i = 1;i<10;i++){
             this.numbersSelectorPanel.push(i);
@@ -102,9 +118,11 @@ export default {
     },
     buildBoardByPuzzleId(id){
         this.activePuzzleId = id;
-        let activePuzzle = PuzzlesStore.getPuzzleById(this.activePuzzleId);
         
-        FieldsStore.buildCompleteFieldsForBoard(activePuzzle);
+        let activePuzzle = PuzzlesStore.getPuzzleById(this.activePuzzleId);
+        let solution = SudokuSolving.solveGrid(activePuzzle);
+        
+        FieldsStore.buildCompleteFieldsForBoard(activePuzzle,solution);
     },      
   },
   data () {
@@ -113,6 +131,11 @@ export default {
       fields : FieldsStore.fields,
       peerMatrix : FieldsStore.peerMatrix,
       numbersSelectorPanel : [],
+      clock : {
+          hours : 0,
+          minutes : 0,
+          seconds : 0
+      }
     }
   }
 }
@@ -207,7 +230,7 @@ export default {
     }
     
     /** @todo remove testing **/
-    .puzzle-field-solution-computed {color:aqua;position:absolute;}
+    .puzzle-field-solution-computed {color:aqua;position:absolute;font-size:10px;}
     .square {   position: relative; }
     .puzzle-field-allowed-values {font-size:10px;}
 </style>
