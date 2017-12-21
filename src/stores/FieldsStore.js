@@ -6,22 +6,33 @@ export const FieldsStore = new Vue({
     data: {
         fields : [],
         activePuzzle : [],
-        activePuzzleId : "",
         peerMatrix : {
           'rows' : [],
           'cols' : [],
           'regions' : []  
-        }        
+        },
+        unsolvedFieldsInGrid : 0
     },
     created() {
+        var self = this;
         this.generateEmptyFields();
         this.initPeerMatrix();
+    
     },   
     methods: {
-        buildCompleteFieldsForBoard(activePuzzle,solution){
+        buildCompleteFieldsForBoard(activePuzzle){
             this.activePuzzle = activePuzzle;
-            this.solution = solution;
-            this.assignPuzzleValuesToFields();
+            this.assignGridToFields();
+            this.assignSolutionToFields();
+            this.setUnsolvedFieldsInGrid();
+            
+        },
+        setUnsolvedFieldsInGrid(){
+            for(let i = 0; i < this.activePuzzle['grid'].length; i++ ){
+                if(parseInt(this.activePuzzle['grid'][i]) > 0 ){
+                    this.unsolvedFieldsInGrid++;
+                }
+            }                
         },
         /**
         * Generate the model of each field. Value attributes are empty as the puzzle data is not available at this time
@@ -32,16 +43,15 @@ export const FieldsStore = new Vue({
                 field.colIndex = this.calculateColIndexForField(i);
                 field.rowIndex = this.calculateRowIndexForField(i);
                 field.regionIndex = this.calculateRegionIndexForField(field.colIndex,field.rowIndex)
-                field.value = "";
+                field.value;
                 field.isUserInput = true;
                 field.id = i-1;
                 field.validation = {};
                 field.validation.timeout = 0;
                 field.validation.hasError = "";
                 field.validation.activeInput = "";
-                field.userNumber = "";
+                field.userNumber;
                 field.solution = 0;
-
     
                 this.fields.push(field);
             }
@@ -118,28 +128,39 @@ export const FieldsStore = new Vue({
             return regionIndex;
         },
         /**
-        * Maps the values of the puzzles to the empty fields and creates the peer Matrix for each field
+        * Maps the values of on starting grid to the empty fields
         */
-        assignPuzzleValuesToFields(){
+        assignGridToFields(){
 
             for(let index = 0; index < this.fields.length; index++){
-                let puzzleNumber = parseInt(this.activePuzzle[index]);
+                let puzzleNumber = parseInt(this.activePuzzle['grid'][index]);
 
-                /**
-                * Save value in Matrix with the peer siblings of current field
-                */
-                this.peerMatrix.regions[this.fields[index].regionIndex].push(puzzleNumber);
-                this.peerMatrix.rows[this.fields[index].rowIndex].push(puzzleNumber);
-                this.peerMatrix.cols[this.fields[index].colIndex].push(puzzleNumber);
+                this.setPeerMatrixValueForSingleField(index,puzzleNumber);
 
                 if(puzzleNumber !== 0){
                     this.fields[index].value = puzzleNumber;
                     this.fields[index].isUserInput = false;
                 }
-                
-                this.fields[index].solution = this.solution[index];
             }
         },
+        /**
+        * Assign values to one field of peer Matrix
+        * The peer matrix is used to "validate" the user input to give the user small hints if he is right or wrong
+        */
+        setPeerMatrixValueForSingleField(index,value){
+            this.peerMatrix.regions[this.fields[index].regionIndex].push(value);
+            this.peerMatrix.rows[this.fields[index].rowIndex].push(value);
+            this.peerMatrix.cols[this.fields[index].colIndex].push(value); 
+        },
+        /**
+        * Assigns the solution array to all fields
+        */
+        assignSolutionToFields(){
+            var self = this;
+            this.fields.forEach(function(field,index){
+                field.solution = parseInt(self.activePuzzle['solution'][index]);
+            })
+        },        
 
     }
 })

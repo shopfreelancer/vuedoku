@@ -1,77 +1,51 @@
 <template>
 <div>  
-    <div id="board" class="board animated fadeIn">{{clock}}
-        
-        <div id="editorWrap">
-            <div id="editorButtonsWrap">
-                <button type="button" class="btn btn-outline-primary">Edit</button>
-                <button type="button" class="btn btn-outline-secondary">Note</button>
-            </div>
-            <div id="numberSelectorWrap">
-                <button class="btn btn-secondary" v-for="number in numbersSelectorPanel">{{number}}</button>
-            </div>
-        </div>
-        
+    <div id="board" class="board animated fadeIn">
+        <board-number-selector v-show="showNumberSelector"/>
         <div id="squareWrap">
             <div class="square" v-bind:class="{ 'has-error animated bounce' : field.validation.hasError, 'activeField' : field.validation.activeInput}" v-for="(field, key) in fields" :key="field.id" v-bind:id="field.id">
-                <span v-if="field.solution != 0" class="puzzle-field-solution-computed">{{field.solution}}</span>
-                <span v-if="field.value != 0" class="puzzle-field-value">{{field.value}}</span>
-           
+
+                <span v-if="!field.isUserInput" class="puzzle-field-value-grid">{{field.value}}</span>
+                
                 <input v-else v-model="field.userNumber" type="number" maxlength="1" min="1" max="9" step="1" v-bind:timeout="field.validation.timeout" @input="validateField(field,$event)" class="puzzle-field-empty">
             </div>
         </div>
 
         <div id="badgeWrap">
             <span class="badge badge-light">Puzzle {{ activePuzzleId }}</span>
-            <span class="badge badge-dark" @click="saveGame">Save Game</span>
+            <board-clock v-bind:userWonGame="userWonGame"/>
         </div>
     </div>
+    
+    <board-solved v-if="userWonGame"/>
+    
 </div>
 </template>
 
 <script>
+import {EventBus} from '../event-bus.js';
+import BoardClock from '@/components/BoardClock'
+import BoardNumberSelector from '@/components/BoardNumberSelector'
+import BoardSolved from '@/components/BoardSolved'
 import {PuzzlesStore} from '../stores/PuzzlesStore.js'
 import {FieldsStore} from '../stores/FieldsStore.js'
-import {SudokuSolving} from '../helper/sudoku.js'    
 
 export default {
   name: 'Board',
   created(){
       var self = this;
-      this.initNumbersSelectorPanel();
-      //this.startRandomPuzzle();
-      this.buildBoardByPuzzleId(7);
       
-      setInterval(self.setClock, 1000);
-  },
+      if(self.methodCall === 'startRandomPuzzle'){
+            self.startRandomPuzzle();
+      }
+      
+      if(self.methodCall === 'mockOneFieldToVictory'){
+            self.mockOneFieldToVictory();
+
+      }
+      
+    },    
   methods: {
-     setClock(){
-         if(this.clock.seconds < 60){
-             this.clock.seconds += 1;
-         } else {
-             this.clock.seconds = 0;
-             this.clock.minutes += 1;
-         }
-         
-         if(this.clock.minutes > 59){
-             this.clock.hours += 1;
-             this.clock.minutes = 0;
-         }
-         
-   
-   
-         
-     },
-     initNumbersSelectorPanel(){
-        for(let i = 1;i<10;i++){
-            this.numbersSelectorPanel.push(i);
-        }
-    },
-    saveGame(){
-        // get all, fields. save to localstorage.
-        let data = this.fields;
-        localStorage.setItem( "savedGame", JSON.stringify( data ) );
-    },
     numberExistInRow(field,number){
         if(this.peerMatrix.rows[field.rowIndex].includes(number)){
             return true;
@@ -109,33 +83,74 @@ export default {
                 clearTimeout(field.validation.timeout);
             }
             }, 1000);
+    
+            self.udpateFieldsTillVictory();
         return;
         
     },
     startRandomPuzzle(){
         let randomPuzzleId = PuzzlesStore.getRandomPuzzleId();
+        
         this.buildBoardByPuzzleId(randomPuzzleId);
     },
     buildBoardByPuzzleId(id){
         this.activePuzzleId = id;
         
         let activePuzzle = PuzzlesStore.getPuzzleById(this.activePuzzleId);
-        let solution = SudokuSolving.solveGrid(activePuzzle);
+
+        FieldsStore.buildCompleteFieldsForBoard(activePuzzle);
         
-        FieldsStore.buildCompleteFieldsForBoard(activePuzzle,solution);
-    },      
+        this.udpateFieldsTillVictory();
+    },
+    userAchievedVictory(){
+        this.userWonGame = true;
+    },
+    udpateFieldsTillVictory(){
+        var self = this;
+        let fieldsSolvedByUser = 0;
+        this.fields.forEach(function(field){
+            if(field.isUserInput === true && parseInt(field.userNumber) === field.solution ){
+                fieldsSolvedByUser++;
+            }
+        })
+        self.fieldsTillVictory = 81 - (FieldsStore.unsolvedFieldsInGrid + fieldsSolvedByUser);
+        
+        if(self.fieldsTillVictory === 0){
+            self.userAchievedVictory();
+        }
+    },
+    /**
+    * Mock field for an almost game
+    */
+    mockOneFieldToVictory(){
+        this.buildBoardByPuzzleId(7);
+        
+        let oneFieldFound = false;
+        for(let i = 1; i < FieldsStore.fields.length; i++){
+            // skip this field so we have exactly one field without solution
+            if(FieldsStore.fields[i].isUserInput === true && oneFieldFound === false){
+                oneFieldFound = true;
+            } else {
+                let tempField = FieldsStore.fields[i];
+                tempField.value = parseInt(tempField['solution']);
+                tempField.userNumber = parseInt(tempField['solution']);
+                this.$set(FieldsStore.fields, i, tempField);
+            }
+        }
+    }
   },
+  components : {
+      BoardClock, BoardNumberSelector, BoardSolved
+  },
+  props : ['methodCall'],
   data () {
     return {
       activePuzzleId : "",
       fields : FieldsStore.fields,
       peerMatrix : FieldsStore.peerMatrix,
-      numbersSelectorPanel : [],
-      clock : {
-          hours : 0,
-          minutes : 0,
-          seconds : 0
-      }
+      fieldsTillVictory : 0,
+      userWonGame : false,
+      showNumberSelector : false
     }
   }
 }
@@ -166,7 +181,6 @@ export default {
         border:2px solid white;
         width: 11.1111111%;
         box-sizing: border-box;
-        
         max-height: calc((100vh - 4vw)/9);
         font-size: 5vw;
         line-height: 5vw;
@@ -194,7 +208,7 @@ export default {
         outline: 0px solid transparent;
     }
     
-    .puzzle-field-solution {
+    .puzzle-field-value-grid {
         color:bisque;
         vertical-align:middle;
     }
@@ -218,16 +232,7 @@ export default {
     #start {
         margin-top: 100px;
     }
-    
-    #numberSelectorWrap {
-        margin-bottom:20px;
-    }
-    
-    #editorButtonsWrap {margin-bottom:10px;}
-    
-    .activeField {
-        outline:2px solid #5bc0de;
-    }
+
     
     /** @todo remove testing **/
     .puzzle-field-solution-computed {color:aqua;position:absolute;font-size:10px;}

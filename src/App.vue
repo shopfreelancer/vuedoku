@@ -1,28 +1,31 @@
 <template>
   <div id="app">
-    <component :is="activeComponent"></component>
+    <component :is="activeComponent" v-bind:methodCall="methodCall"></component>
   </div>
 </template>
 
 <script>
 import Start from '@/components/Start'
 import Board from '@/components/Board'
+import {EventBus} from './event-bus.js'; 
+import {PuzzlesStore} from './stores/PuzzlesStore.js'
+import {PuzzlesFileParser} from "./stores/PuzzlesFileParser.js"
     
 export default {
     name: 'app',
     components : {Start, Board},
     created: function() {
           var self = this;
-         /**
-          * Props go to down to children, events go up to parent
-          */
-          self.$on("activeComponent", function (activeComponent) {
+        
+          EventBus.$on("activeComponent", function (activeComponent,methodCall) {
               self.activeComponent = activeComponent;
+              self.methodCall = methodCall;
           });
     },
     data: function () {
         return {
-            activeComponent: "Board"
+            activeComponent: 'Start',
+            methodCall : ''
         }
     }
 }

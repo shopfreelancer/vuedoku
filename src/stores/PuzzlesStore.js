@@ -1,7 +1,7 @@
 import Vue from 'vue'
-import {PuzzlesFileParser} from "./PuzzlesFileParser.js"
 import {EventBus} from '../event-bus.js';
 import {RandomIntMixin} from '../mixins/randomInt.js';
+import {PuzzlesFileParser} from "./PuzzlesFileParser.js"
 
 export const PuzzlesStore = new Vue({
     data: {
@@ -9,22 +9,25 @@ export const PuzzlesStore = new Vue({
         puzzles : []
     },
     created() {
-        if (localStorage.puzzles) {   
+        if (localStorage.puzzles) {
             this.puzzles =  this.getData("puzzles");
             /**
             * PuzzlesStore is an own Vue instance. 
             * Timeout is set to make sure event gets emited after other instances are created and listen.
             */
-            setTimeout(function(){EventBus.$emit("puzzleStoreReady")},100);
+            setTimeout(function(){EventBus.$emit("puzzlesStoreReady")},100);
         } else {
             var self = this;
-            EventBus.$on("puzzleDataParsed", function (e) {
-                var puzzles = PuzzlesFileParser.getPuzzles()         
+            
+            PuzzlesFileParser.parseSudokuPuzzles();
+            
+            EventBus.$on("puzzleDataParsed", function () {
+                let puzzles = PuzzlesFileParser.getPuzzles(); 
                 self.setData("puzzles", puzzles);
                 self.puzzles = self.getData("puzzles");
-                EventBus.$emit("puzzleStoreReady");
+                EventBus.$emit("puzzlesStoreReady");
             });
-        }
+        }        
     },
     watch: {
         puzzles: {
@@ -42,10 +45,11 @@ export const PuzzlesStore = new Vue({
            return JSON.parse( localStorage.getItem( key ) );
         },
         getRandomPuzzleId(){
-            if(this.puzzles.length === 0){
+            let len = Object.keys(PuzzlesStore.puzzles).length;
+            if(len === 0){
                 return false;
             }
-            return this.getRandomInt(0,this.puzzles.length);
+            return this.getRandomInt(0,len);
         },
         getPuzzleById(id){
             if(this.puzzles[id] === "undefined"){
