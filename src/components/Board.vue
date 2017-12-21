@@ -41,7 +41,6 @@ export default {
       
       if(self.methodCall === 'mockOneFieldToVictory'){
             self.mockOneFieldToVictory();
-
       }
       
     },    

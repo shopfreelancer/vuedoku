@@ -17,10 +17,10 @@ export default {
   name: 'Start',
   props : ['activeComponent'],
   methods: {
-    initGame(event){
+    initGame(){
         EventBus.$emit('activeComponent', 'Board', 'startRandomPuzzle');
     },
-    mockOneFieldToVictory(event){
+    mockOneFieldToVictory(){
         EventBus.$emit('activeComponent', 'Board', 'mockOneFieldToVictory');
     }
   }    
