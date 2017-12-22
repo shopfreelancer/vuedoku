@@ -32,14 +32,14 @@ export const FieldsStore = new Vue({
         * Generate the model of each field. Value attributes are empty as the puzzle data is not available at this time
         */
         generateEmptyFields(){     
-            for(let i=1;i<=(9*9);i++){
+            for(let i=0;i<81;i++){
                 var field = {};
-                field.colIndex = this.calculateColIndexForField(i);
-                field.rowIndex = this.calculateRowIndexForField(i);
+                field.colIndex = this.calculateColIndexForField(i+1);
+                field.rowIndex = this.calculateRowIndexForField(i+1);
                 field.regionIndex = this.calculateRegionIndexForField(field.colIndex,field.rowIndex)
                 field.value;
                 field.isUserInput = true;
-                field.id = i-1;
+                field.id = i;
                 field.validation = {};
                 field.validation.timeout = 0;
                 field.validation.hasError = "";
@@ -47,12 +47,12 @@ export const FieldsStore = new Vue({
                 field.userNumber;
                 field.solution = 0;
     
-                this.$set(this.fields,i,field);
+                this.$set(this.fields, i, field);
             
             }
         }, 
         initPeerMatrix(){
-            for(let i = 1;i < 10;i++){
+            for(let i = 1; i < 10; i++){
                 this.peerMatrix.rows[i] = [];
                 this.peerMatrix.cols[i] = [];
                 this.peerMatrix.regions[i] = [];
@@ -123,18 +123,17 @@ export const FieldsStore = new Vue({
             return regionIndex;
         },
         /**
-        * Maps the values of on starting grid to the empty fields
+        * Maps the values of starting grid to fields if they are numbers [1-9]
         */
         assignGridToFields(){
-
-            for(let index = 0; index < this.fields.length; index++){
-                let puzzleNumber = parseInt(this.activePuzzle['grid'][index]);
-
-                this.setPeerMatrixValueForSingleField(index,puzzleNumber);
-
+            for(let i = 0; i < this.fields.length; i++){
+                let puzzleNumber = parseInt(this.activePuzzle['grid'][i]);
+                this.setPeerMatrixValueForSingleField(i,puzzleNumber);
                 if(puzzleNumber !== 0){
-                    this.fields[index].value = puzzleNumber;
-                    this.fields[index].isUserInput = false;
+                    let tempField = this.fields[i];
+                    tempField.value = puzzleNumber;
+                    tempField.isUserInput = false;
+                    this.$set(this.fields, i, tempField);
                 }
             }
         },
