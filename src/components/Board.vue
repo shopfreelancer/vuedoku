@@ -1,7 +1,9 @@
 <template>
 <div>  
     <div id="board" class="board animated fadeIn">
+        
         <board-number-selector v-show="showNumberSelector"/>
+        
         <div id="squareWrap">
             <div class="square" v-bind:class="{ 'has-error animated bounce' : field.validation.hasError, 'activeField' : field.validation.activeInput}" v-for="(field, key) in fields" :key="field.id" v-bind:id="field.id">
 
@@ -12,6 +14,7 @@
 
         <div id="badgeWrap">
             <span @click="exitGame" class="exit-game-button badge badge-light">Exit Game</span>
+            <span @click="saveGame" class="badge badge-light">Save Game</span>
             <span class="badge badge-light">Puzzle {{ activePuzzleId }}</span>
             <board-clock v-bind:userWonGame="userWonGame"/>
         </div>
@@ -43,6 +46,7 @@ export default {
             self.mockOneFieldToVictory();
       }
       
+
       this.$on('udpateFieldsTillVictory',function(){
           self.udpateFieldsTillVictory();
       });
@@ -54,6 +58,11 @@ export default {
         FieldsStore.buildCompleteFieldsForBoard(this.activePuzzleId);
         
         this.udpateFieldsTillVictory();
+    },
+    saveGame(){
+        // how to get the clock from child?
+        FieldsStore.saveGame();
+        
     },
     userAchievedVictory(){
         this.userWonGame = true;
@@ -72,6 +81,9 @@ export default {
             self.userAchievedVictory();
         }
     },
+    exitGame(){
+        EventBus.$emit('activeComponent', 'Start');
+    },      
     /**
     * Mock field for an almost game
     */
@@ -86,7 +98,6 @@ export default {
                 oneFieldFound = true;
             } else {
                 let tempField = FieldsStore.fields[i];
-                tempField.value = parseInt(tempField['solution']);
                 tempField.userNumber = parseInt(tempField['solution']);
                 this.$set(FieldsStore.fields, i, tempField);
             }
@@ -174,7 +185,7 @@ export default {
         height:100%;
         border:0;
         background-color:transparent;
-        font-size: 6vw;
+        font-size: 5vw;
         text-align: right;
         padding:0;
     }

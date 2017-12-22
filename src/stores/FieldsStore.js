@@ -37,18 +37,17 @@ export const FieldsStore = new Vue({
                 field.colIndex = this.calculateColIndexForField(i+1);
                 field.rowIndex = this.calculateRowIndexForField(i+1);
                 field.regionIndex = this.calculateRegionIndexForField(field.colIndex,field.rowIndex)
-                field.value;
                 field.isUserInput = true;
                 field.id = i;
+                field.value = '';
                 field.validation = {};
                 field.validation.timeout = 0;
                 field.validation.hasError = "";
                 field.validation.activeInput = "";
-                field.userNumber;
+                field.userNumber = "";
                 field.solution = 0;
     
                 this.$set(this.fields, i, field);
-            
             }
         }, 
         initPeerMatrix(){
@@ -128,6 +127,7 @@ export const FieldsStore = new Vue({
         assignGridToFields(){
             for(let i = 0; i < this.fields.length; i++){
                 let puzzleNumber = parseInt(this.activePuzzle['grid'][i]);
+
                 this.setPeerMatrixValueForSingleField(i,puzzleNumber);
                 if(puzzleNumber !== 0){
                     let tempField = this.fields[i];
@@ -167,4 +167,12 @@ export const FieldsStore = new Vue({
         },
         unsolvedFieldsInGrid : 0
     },
+        },
+        saveGame(){
+            let data = this.fields;
+            localStorage.setItem( "board", JSON.stringify( data ) );
+        },
+        
+
+    }
 })

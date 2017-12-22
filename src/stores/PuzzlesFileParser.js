@@ -3,7 +3,7 @@ import { EventBus } from '../event-bus.js';
      
 export const PuzzlesFileParser = new Vue({
     data: {
-        puzzlesWithhSolutions : [],
+        puzzlesWithSolutions : [],
         importFilePath : "/static/data/sudoku.json",
     },
     created() {
@@ -13,12 +13,12 @@ export const PuzzlesFileParser = new Vue({
         parseSudokuPuzzles(){
           fetch(this.importFilePath)
           .then(response =>response.text()).then(text => {
-              this.puzzlesWithhSolutions = JSON.parse(text);
+              this.puzzlesWithSolutions = JSON.parse(text);
               EventBus.$emit("puzzleDataParsed");
           });
         },
         getPuzzles(){
-            return JSON.parse(JSON.stringify(this.puzzlesWithhSolutions));
+            return JSON.parse(JSON.stringify(this.puzzlesWithSolutions));
         }
     }
 })
