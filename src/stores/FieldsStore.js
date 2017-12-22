@@ -5,13 +5,15 @@ import {PuzzlesStore} from '../stores/PuzzlesStore.js';
 
 export const FieldsStore = new Vue({
     created() {
-        var self = this;
-        this.generateEmptyFields();
-        this.initPeerMatrix();
-    
+        this.resetStore();
     },   
     methods: {
+        resetStore(){
+            this.generateEmptyFields();
+            this.initPeerMatrix(); 
+        },        
         buildCompleteFieldsForBoard(activePuzzleId){
+            this.resetStore();
             this.activePuzzleId = activePuzzleId;
             this.activePuzzle = PuzzlesStore.getPuzzleById(this.activePuzzleId);
             this.assignGridToFields();
@@ -45,7 +47,8 @@ export const FieldsStore = new Vue({
                 field.userNumber;
                 field.solution = 0;
     
-                this.fields.push(field);
+                this.$set(this.fields,i,field);
+            
             }
         }, 
         initPeerMatrix(){
