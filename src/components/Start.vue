@@ -4,7 +4,7 @@
             <h1>数独 [Sudoku]</h1>
             <p>Simple Demo of a Sudoku board realized with <a href="https://vuejs.org/" target="_blank">Vue.js</a>, <a target="_blank" href="https://bootswatch.com/">Bootswatch</a>, <a target="_blank" href="https://daneden.github.io/animate.css/">animate.css</a>. Uses 50 Sudoku Puzzles from <a target="_blank" href="https://projecteuler.net/index.php?section=problems&id=96">Project Euler</a>.</p>
 
-            <button @click="initGame" class="btn btn-success">Start Random Puzzle</button>
+            <button @click="randomGame" class="btn btn-success">Start Random Puzzle</button>
             <button @click="mockOneFieldToVictory" class="btn btn-success">Mock almost won game</button>
             
         </div>
@@ -12,13 +12,15 @@
 </template>
 
 <script>
-import {EventBus} from '../event-bus.js';   
+import {EventBus} from '../event-bus.js';  
+import {PuzzlesStore} from '../stores/PuzzlesStore.js';    
 export default {
   name: 'Start',
   props : ['activeComponent'],
   methods: {
-    initGame(){
-        EventBus.$emit('activeComponent', 'Board', 'startRandomPuzzle');
+    randomGame(){
+        let randomPuzzleId = PuzzlesStore.getRandomPuzzleId();
+        EventBus.$emit('activeComponent', 'Board', 'buildBoardByPuzzleId',randomPuzzleId);
     },
     mockOneFieldToVictory(){
         EventBus.$emit('activeComponent', 'Board', 'mockOneFieldToVictory');

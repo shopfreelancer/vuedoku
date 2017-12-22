@@ -6,8 +6,7 @@
             <div class="square" v-bind:class="{ 'has-error animated bounce' : field.validation.hasError, 'activeField' : field.validation.activeInput}" v-for="(field, key) in fields" :key="field.id" v-bind:id="field.id">
 
                 <span v-if="!field.isUserInput" class="puzzle-field-value-grid">{{field.value}}</span>
-                
-                <input v-else v-model="field.userNumber" type="number" maxlength="1" min="1" max="9" step="1" v-bind:timeout="field.validation.timeout" @input="validateField(field,$event)" class="puzzle-field-empty">
+                <board-user-number-input v-bind:peerMatrix="peerMatrix" v-bind:field="field"/>
             </div>
         </div>
 
@@ -27,7 +26,7 @@ import {EventBus} from '../event-bus.js';
 import BoardClock from '@/components/BoardClock'
 import BoardNumberSelector from '@/components/BoardNumberSelector'
 import BoardSolved from '@/components/BoardSolved'
-import {PuzzlesStore} from '../stores/PuzzlesStore.js'
+import BoardUserNumberInput from '@/components/BoardUserNumberInput'
 import {FieldsStore} from '../stores/FieldsStore.js'
 
 export default {
@@ -35,69 +34,23 @@ export default {
   created(){
       var self = this;
       
-      if(self.methodCall === 'startRandomPuzzle'){
-            self.startRandomPuzzle();
+      if(self.methodCall === 'buildBoardByPuzzleId'){
+            self.buildBoardByPuzzleId();
       }
       
       if(self.methodCall === 'mockOneFieldToVictory'){
             self.mockOneFieldToVictory();
       }
       
+      this.$on('udpateFieldsTillVictory',function(){
+          self.udpateFieldsTillVictory();
+      });
+      
     },    
   methods: {
-    numberExistInRow(field,number){
-        if(this.peerMatrix.rows[field.rowIndex].includes(number)){
-            return true;
-        }
-        return false;
-    },
-    numberExistInCol(field,number){
-        if(this.peerMatrix.cols[field.colIndex].includes(number)){
-            return true;
-        }
-        return false;
-    },
-    numberExistInRegion(field,number){
-        if(this.peerMatrix.regions[field.regionIndex].includes(number)){
-            return true;
-        }
-        return false;
-    },       
-    validateField(field,event){
-        var self = this;
-        
-        field.validation.activeInput = true;
-        
-        field.validation.timeout = setTimeout(function () {
-                    
-            let userInput = parseInt(event.target.value);
-            
-            if(self.numberExistInRow(field,userInput) || self.numberExistInCol(field,userInput) || self.numberExistInRegion(field,userInput)){
-                field.validation.hasError = true;
-            } else {
-                field.validation.hasError = false;
-            }
-        
-            if(field.validation.timeout !== "undefined"){
-                clearTimeout(field.validation.timeout);
-            }
-            }, 1000);
-    
-            self.udpateFieldsTillVictory();
-        return;
-        
-    },
-    startRandomPuzzle(){
-        let randomPuzzleId = PuzzlesStore.getRandomPuzzleId();
-        
-        this.buildBoardByPuzzleId(randomPuzzleId);
-    },
-    buildBoardByPuzzleId(id){
-        this.activePuzzleId = id;
-        
-        let activePuzzle = PuzzlesStore.getPuzzleById(this.activePuzzleId);
+    buildBoardByPuzzleId(){
 
-        FieldsStore.buildCompleteFieldsForBoard(activePuzzle);
+        FieldsStore.buildCompleteFieldsForBoard(this.activePuzzleId);
         
         this.udpateFieldsTillVictory();
     },
@@ -139,12 +92,11 @@ export default {
     }
   },
   components : {
-      BoardClock, BoardNumberSelector, BoardSolved
+      BoardClock, BoardNumberSelector, BoardSolved, BoardUserNumberInput
   },
-  props : ['methodCall'],
+  props : ['methodCall', 'activePuzzleId'],
   data () {
     return {
-      activePuzzleId : "",
       fields : FieldsStore.fields,
       peerMatrix : FieldsStore.peerMatrix,
       fieldsTillVictory : 0,

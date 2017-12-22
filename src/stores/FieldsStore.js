@@ -1,18 +1,9 @@
 import Vue from 'vue'
 import {EventBus} from '../event-bus.js';
 import {RandomIntMixin} from '../mixins/randomInt.js';
+import {PuzzlesStore} from '../stores/PuzzlesStore.js'; 
 
 export const FieldsStore = new Vue({
-    data: {
-        fields : [],
-        activePuzzle : [],
-        peerMatrix : {
-          'rows' : [],
-          'cols' : [],
-          'regions' : []  
-        },
-        unsolvedFieldsInGrid : 0
-    },
     created() {
         var self = this;
         this.generateEmptyFields();
@@ -20,8 +11,9 @@ export const FieldsStore = new Vue({
     
     },   
     methods: {
-        buildCompleteFieldsForBoard(activePuzzle){
-            this.activePuzzle = activePuzzle;
+        buildCompleteFieldsForBoard(activePuzzleId){
+            this.activePuzzleId = activePuzzleId;
+            this.activePuzzle = PuzzlesStore.getPuzzleById(this.activePuzzleId);
             this.assignGridToFields();
             this.assignSolutionToFields();
             this.setUnsolvedFieldsInGrid();
@@ -161,6 +153,16 @@ export const FieldsStore = new Vue({
                 field.solution = parseInt(self.activePuzzle['solution'][index]);
             })
         },        
-
-    }
+    },
+    data: {
+        fields : [],
+        activePuzzle : [],
+        activePuzzleId : '',
+        peerMatrix : {
+          'rows' : [],
+          'cols' : [],
+          'regions' : []  
+        },
+        unsolvedFieldsInGrid : 0
+    },
 })

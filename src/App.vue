@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <component :is="activeComponent" v-bind:methodCall="methodCall"></component>
+    <component :is="activeComponent" v-bind:methodCall="methodCall" v-bind:activePuzzleId="id"></component>
   </div>
 </template>
 
@@ -17,15 +17,17 @@ export default {
     created: function() {
           var self = this;
         
-          EventBus.$on("activeComponent", function (activeComponent,methodCall) {
+          EventBus.$on("activeComponent", function (activeComponent,methodCall,id) {
               self.activeComponent = activeComponent;
               self.methodCall = methodCall;
+              self.id = id;
           });
     },
     data: function () {
         return {
             activeComponent: 'Start',
-            methodCall : ''
+            methodCall : '',
+            id : ''
         }
     }
 }
