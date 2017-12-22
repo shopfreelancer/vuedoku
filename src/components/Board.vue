@@ -11,6 +11,7 @@
         </div>
 
         <div id="badgeWrap">
+            <span @click="exitGame" class="exit-game-button badge badge-light">Exit Game</span>
             <span class="badge badge-light">Puzzle {{ activePuzzleId }}</span>
             <board-clock v-bind:userWonGame="userWonGame"/>
         </div>
@@ -90,6 +91,9 @@ export default {
                 this.$set(FieldsStore.fields, i, tempField);
             }
         }
+    },
+    exitGame(){
+        EventBus.$emit('activeComponent', 'Start');
     }
   },
   components : {
@@ -184,10 +188,9 @@ export default {
     #start {
         margin-top: 100px;
     }
-
     
-    /** @todo remove testing **/
-    .puzzle-field-solution-computed {color:aqua;position:absolute;font-size:10px;}
-    .square {   position: relative; }
-    .puzzle-field-allowed-values {font-size:10px;}
+    .exit-game-button {
+        cursor:pointer;
+    }
+
 </style>
