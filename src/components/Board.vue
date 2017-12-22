@@ -1,7 +1,9 @@
 <template>
 <div>  
     <div id="board" class="board animated fadeIn">
+        
         <board-number-selector v-show="showNumberSelector"/>
+        
         <div id="squareWrap">
             <div class="square" v-bind:class="{ 'has-error animated bounce' : field.validation.hasError, 'activeField' : field.validation.activeInput}" v-for="(field, key) in fields" :key="field.id" v-bind:id="field.id">
 
@@ -12,6 +14,8 @@
         </div>
 
         <div id="badgeWrap">
+            <span @click="saveGame" class="badge badge-light">Save Game</span>
+            <span @click="exitGame" class="exit-game-badge badge badge-warning">Exit Game</span>
             <span class="badge badge-light">Puzzle {{ activePuzzleId }}</span>
             <board-clock v-bind:userWonGame="userWonGame"/>
         </div>
@@ -43,7 +47,7 @@ export default {
             self.mockOneFieldToVictory();
       }
       
-    },    
+  },    
   methods: {
     numberExistInRow(field,number){
         if(this.peerMatrix.rows[field.rowIndex].includes(number)){
@@ -65,7 +69,6 @@ export default {
     },       
     validateField(field,event){
         var self = this;
-        
         field.validation.activeInput = true;
         
         field.validation.timeout = setTimeout(function () {
@@ -89,17 +92,19 @@ export default {
     },
     startRandomPuzzle(){
         let randomPuzzleId = PuzzlesStore.getRandomPuzzleId();
-        
         this.buildBoardByPuzzleId(randomPuzzleId);
     },
     buildBoardByPuzzleId(id){
         this.activePuzzleId = id;
-        
         let activePuzzle = PuzzlesStore.getPuzzleById(this.activePuzzleId);
-
         FieldsStore.buildCompleteFieldsForBoard(activePuzzle);
         
         this.udpateFieldsTillVictory();
+    },
+    saveGame(){
+        // how to get the clock from child?
+        FieldsStore.saveGame();
+        
     },
     userAchievedVictory(){
         this.userWonGame = true;
@@ -118,6 +123,9 @@ export default {
             self.userAchievedVictory();
         }
     },
+    exitGame(){
+        EventBus.$emit('activeComponent', 'Start');
+    },      
     /**
     * Mock field for an almost game
     */
@@ -131,7 +139,6 @@ export default {
                 oneFieldFound = true;
             } else {
                 let tempField = FieldsStore.fields[i];
-                tempField.value = parseInt(tempField['solution']);
                 tempField.userNumber = parseInt(tempField['solution']);
                 this.$set(FieldsStore.fields, i, tempField);
             }
@@ -217,7 +224,7 @@ export default {
         height:100%;
         border:0;
         background-color:transparent;
-        font-size: 6vw;
+        font-size: 5vw;
         text-align: right;
         padding:0;
     }
@@ -231,10 +238,7 @@ export default {
     #start {
         margin-top: 100px;
     }
-
     
-    /** @todo remove testing **/
-    .puzzle-field-solution-computed {color:aqua;position:absolute;font-size:10px;}
-    .square {   position: relative; }
-    .puzzle-field-allowed-values {font-size:10px;}
+    .exit-game-badge {cursor: pointer;}
+
 </style>

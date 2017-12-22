@@ -5,7 +5,10 @@ import {RandomIntMixin} from '../mixins/randomInt.js';
 export const FieldsStore = new Vue({
     data: {
         fields : [],
-        activePuzzle : [],
+        activePuzzle : {
+            'grid' : '',
+            'solution' : ''
+        },
         peerMatrix : {
           'rows' : [],
           'cols' : [],
@@ -14,13 +17,15 @@ export const FieldsStore = new Vue({
         unsolvedFieldsInGrid : 0
     },
     created() {
-        var self = this;
-        this.generateEmptyFields();
-        this.initPeerMatrix();
-    
+        this.resetStore();
     },   
     methods: {
+        resetStore(){
+            this.generateEmptyFields();
+            this.initPeerMatrix(); 
+        },
         buildCompleteFieldsForBoard(activePuzzle){
+            this.resetStore();
             this.activePuzzle = activePuzzle;
             this.assignGridToFields();
             this.assignSolutionToFields();
@@ -37,23 +42,24 @@ export const FieldsStore = new Vue({
         /**
         * Generate the model of each field. Value attributes are empty as the puzzle data is not available at this time
         */
-        generateEmptyFields(){     
-            for(let i=1;i<=(9*9);i++){
+        generateEmptyFields(){ 
+            for(let i=0;i<(9*9);i++){
                 var field = {};
-                field.colIndex = this.calculateColIndexForField(i);
-                field.rowIndex = this.calculateRowIndexForField(i);
+                field.colIndex = this.calculateColIndexForField(i+1);
+                field.rowIndex = this.calculateRowIndexForField(i+1);
                 field.regionIndex = this.calculateRegionIndexForField(field.colIndex,field.rowIndex)
-                field.value;
                 field.isUserInput = true;
-                field.id = i-1;
+                field.id = i;
+                field.value = '';
                 field.validation = {};
                 field.validation.timeout = 0;
                 field.validation.hasError = "";
                 field.validation.activeInput = "";
-                field.userNumber;
+                field.userNumber = "";
                 field.solution = 0;
-    
-                this.fields.push(field);
+                
+                this.$set(this.fields, i, field);
+                
             }
         }, 
         initPeerMatrix(){
@@ -131,15 +137,15 @@ export const FieldsStore = new Vue({
         * Maps the values of on starting grid to the empty fields
         */
         assignGridToFields(){
+            for(let i = 0; i < this.fields.length; i++){
+                let puzzleNumber = parseInt(this.activePuzzle['grid'][i]);
 
-            for(let index = 0; index < this.fields.length; index++){
-                let puzzleNumber = parseInt(this.activePuzzle['grid'][index]);
-
-                this.setPeerMatrixValueForSingleField(index,puzzleNumber);
-
+                this.setPeerMatrixValueForSingleField(i,puzzleNumber);
                 if(puzzleNumber !== 0){
-                    this.fields[index].value = puzzleNumber;
-                    this.fields[index].isUserInput = false;
+                    let tempField = this.fields[i];
+                    tempField.value = puzzleNumber;
+                    tempField.isUserInput = false;
+                    this.$set(this.fields, i, tempField);
                 }
             }
         },
@@ -160,7 +166,12 @@ export const FieldsStore = new Vue({
             this.fields.forEach(function(field,index){
                 field.solution = parseInt(self.activePuzzle['solution'][index]);
             })
-        },        
+        },
+        saveGame(){
+            let data = this.fields;
+            localStorage.setItem( "board", JSON.stringify( data ) );
+        },
+        
 
     }
 })

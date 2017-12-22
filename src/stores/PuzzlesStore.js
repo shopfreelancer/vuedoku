@@ -10,7 +10,7 @@ export const PuzzlesStore = new Vue({
     },
     created() {
         if (localStorage.puzzles) {
-            this.puzzles =  this.getData("puzzles");
+            this.puzzles =  PuzzlesFileParser.getPuzzles(); 
             /**
             * PuzzlesStore is an own Vue instance. 
             * Timeout is set to make sure event gets emited after other instances are created and listen.
