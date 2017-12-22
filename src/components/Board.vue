@@ -75,7 +75,8 @@ export default {
     * Mock field for an almost game
     */
     mockOneFieldToVictory(){
-        this.buildBoardByPuzzleId(7);
+    
+        this.buildBoardByPuzzleId();
         
         let oneFieldFound = false;
         for(let i = 1; i < FieldsStore.fields.length; i++){

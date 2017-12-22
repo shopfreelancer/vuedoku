@@ -23,7 +23,8 @@ export default {
         EventBus.$emit('activeComponent', 'Board', 'buildBoardByPuzzleId',randomPuzzleId);
     },
     mockOneFieldToVictory(){
-        EventBus.$emit('activeComponent', 'Board', 'mockOneFieldToVictory');
+        let activePuzzleId = 7;
+        EventBus.$emit('activeComponent', 'Board', 'mockOneFieldToVictory',activePuzzleId);
     }
   }    
 }
