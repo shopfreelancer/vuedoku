@@ -1,7 +1,6 @@
 import Vue from 'vue'
 import {EventBus} from '../event-bus.js';
 import {RandomIntMixin} from '../mixins/randomInt.js';
-import {PuzzlesStore} from '../stores/PuzzlesStore.js'; 
 
 export const FieldsStore = new Vue({
     created() {
@@ -15,7 +14,7 @@ export const FieldsStore = new Vue({
         buildCompleteFieldsForBoard(activePuzzleId){
             this.resetStore();
             this.activePuzzleId = activePuzzleId;
-            this.activePuzzle = PuzzlesStore.getPuzzleById(this.activePuzzleId);
+            this.activePuzzle = this.$PuzzlesStore.getPuzzleById(this.activePuzzleId);
             this.assignGridToFields();
             this.assignSolutionToFields();
             this.setUnsolvedFieldsInGrid();
@@ -154,7 +153,11 @@ export const FieldsStore = new Vue({
             this.fields.forEach(function(field,index){
                 field.solution = parseInt(self.activePuzzle['solution'][index]);
             })
-        },        
+        },  
+        saveGame(){
+            let data = this.fields;
+            localStorage.setItem( "game", JSON.stringify( data ) );
+        },    
     },
     data: {
         fields : [],
@@ -167,12 +170,4 @@ export const FieldsStore = new Vue({
         },
         unsolvedFieldsInGrid : 0
     },
-        },
-        saveGame(){
-            let data = this.fields;
-            localStorage.setItem( "board", JSON.stringify( data ) );
-        },
-        
-
-    }
 })

@@ -2,50 +2,22 @@ import Vue from 'vue'
 import {EventBus} from '../event-bus.js';
 import {RandomIntMixin} from '../mixins/randomInt.js';
 import {PuzzlesFileParser} from "./PuzzlesFileParser.js"
+//import PuzzlesDataJson from '../../static/data/sudoku.json';
 
-export const PuzzlesStore = new Vue({
+const PuzzlesStore = new Vue({
     data: {
-        storageKeyName : "puzzles",
-        puzzles : []
+        puzzles : [],
     },
     created() {
-        if (localStorage.puzzles) {
-            this.puzzles =  PuzzlesFileParser.getPuzzles(); 
-            /**
-            * PuzzlesStore is an own Vue instance. 
-            * Timeout is set to make sure event gets emited after other instances are created and listen.
-            */
-            setTimeout(function(){EventBus.$emit("puzzlesStoreReady")},100);
-        } else {
-            var self = this;
-            
-            PuzzlesFileParser.parseSudokuPuzzles();
-            
-            EventBus.$on("puzzleDataParsed", function () {
-                let puzzles = PuzzlesFileParser.getPuzzles(); 
-                self.setData("puzzles", puzzles);
-                self.puzzles = self.getData("puzzles");
-                EventBus.$emit("puzzlesStoreReady");
-            });
-        }        
+        var self = this;
+        EventBus.$on("puzzleDataParsed",function(){
+            let puzzles = PuzzlesFileParser.puzzles;
+            self.setPuzzles(puzzles);
+        });
     },
-    watch: {
-        puzzles: {
-          handler: function () {
-            this.setData( this.storageKeyName , this.puzzles );
-          },
-          deep: true
-        }
-    },    
-    methods: {       
-        setData( key, data ) {
-            localStorage.setItem( key, JSON.stringify( data ) );
-        },
-        getData( key ) {
-           return JSON.parse( localStorage.getItem( key ) );
-        },
+    methods: {
         getRandomPuzzleId(){
-            let len = Object.keys(PuzzlesStore.puzzles).length;
+            let len = Object.keys(this.puzzles).length;
             if(len === 0){
                 return false;
             }
@@ -56,6 +28,20 @@ export const PuzzlesStore = new Vue({
                 return false;
             }
             return this.puzzles[id];
-        },     
+        },
+        setPuzzles(puzzles){
+            if(!typeof puzzles || puzzles.length < 1){
+                return false;
+            }
+            this.puzzles = puzzles
+        }
     }
 })
+Object.defineProperties(Vue.prototype, {
+  $PuzzlesStore: {
+    get: function () {
+      return PuzzlesStore
+    }
+  }
+})
+export {PuzzlesStore}

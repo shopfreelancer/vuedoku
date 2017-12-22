@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <component :is="activeComponent" v-bind:methodCall="methodCall" v-bind:activePuzzleId="id"></component>
+    <component :is="activeComponent" v-bind:methodCall="methodCall" v-bind:activePuzzleId="activePuzzleId"></component>
   </div>
 </template>
 
@@ -8,8 +8,7 @@
 import Start from '@/components/Start'
 import Board from '@/components/Board'
 import {EventBus} from './event-bus.js'; 
-import {PuzzlesStore} from './stores/PuzzlesStore.js'
-import {PuzzlesFileParser} from "./stores/PuzzlesFileParser.js"
+import {PuzzlesStore} from './stores/PuzzlesStore.js';  
     
 export default {
     name: 'app',
@@ -17,17 +16,17 @@ export default {
     created: function() {
           var self = this;
         
-          EventBus.$on("activeComponent", function (activeComponent,methodCall,id) {
+          EventBus.$on("activeComponent", function (activeComponent,methodCall,activePuzzleId) {
               self.activeComponent = activeComponent;
               self.methodCall = methodCall;
-              self.id = id;
+              self.activePuzzleId = activePuzzleId;
           });
     },
     data: function () {
         return {
             activeComponent: 'Start',
             methodCall : '',
-            id : ''
+            activePuzzleId : ''
         }
     }
 }

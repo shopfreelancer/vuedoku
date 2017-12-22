@@ -12,21 +12,20 @@
 </template>
 
 <script>
-import {EventBus} from '../event-bus.js';  
-import {PuzzlesStore} from '../stores/PuzzlesStore.js';    
+import {EventBus} from '../event-bus.js';    
 export default {
   name: 'Start',
   props : ['activeComponent'],
   methods: {
     randomGame(){
-        let randomPuzzleId = PuzzlesStore.getRandomPuzzleId();
-        EventBus.$emit('activeComponent', 'Board', 'buildBoardByPuzzleId',randomPuzzleId);
+        let randomPuzzleId = this.$PuzzlesStore.getRandomPuzzleId();
+        EventBus.$emit('activeComponent', 'Board', 'buildBoardByPuzzleId', randomPuzzleId);
     },
     mockOneFieldToVictory(){
         let activePuzzleId = 7;
-        EventBus.$emit('activeComponent', 'Board', 'mockOneFieldToVictory',activePuzzleId);
+        EventBus.$emit('activeComponent', 'Board', 'mockOneFieldToVictory', activePuzzleId);
     }
-  }    
+  }
 }
 </script>
 
