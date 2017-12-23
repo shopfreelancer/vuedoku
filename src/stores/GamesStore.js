@@ -24,8 +24,8 @@ const GamesStore = new Vue({
             
             let saveObj = { 
                 clock : clock, 
-                userNumbersString : FieldsStore.getUserNumbersString(),
-                activePuzzleId : FieldsStore.activePuzzleId
+                userNumbersString : this.$FieldsStore.getUserNumbersString(),
+                activePuzzleId : this.$FieldsStore.activePuzzleId
             };
 
             let index = Object.keys(storageData).length;
@@ -41,13 +41,7 @@ const GamesStore = new Vue({
             return false;
         }
         
-        FieldsStore.buildCompleteFieldsForBoard(storageData[id].activePuzzleId);
-        FieldsStore.setUserNumbersFromString(storageData[id].userNumbersString);
-        // insert clock in BoardClock
-        // insert activePuzzle in fields
-        // insert userNumberString
-        
-        return false;
+        return storageData[id];
     },
     loadAllGames(){
         let storageData = this.readStorage();

@@ -15,7 +15,9 @@ export default {
   methods: {
     showSaveGames(){
         this.saveGames = this.$GamesStore.loadAllGames();
-        console.log(this.saveGames);
+    },
+    loadGame(id){
+        this.$router.push({ name: 'loadGame', params: { loadGameId : id }})
     }
   },
   data () {
@@ -27,5 +29,8 @@ export default {
 </script>
 
 <style>
- .save-game-button {cursor:pointer;margin-right:2px;}
+ .save-game-button {
+     cursor:pointer;
+     margin-right:2px;
+    }
 </style>

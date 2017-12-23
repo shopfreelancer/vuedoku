@@ -23,7 +23,7 @@ export default {
   methods: {
     randomGame(){
         let randomPuzzleId = this.$PuzzlesStore.getRandomPuzzleId();
-        EventBus.$emit('activeComponent', 'Board', 'buildBoardByPuzzleId', randomPuzzleId);
+        this.$router.push({ name: 'newGame', params: { activePuzzleId: randomPuzzleId }})
     },
     mockOneFieldToVictory(){
         let activePuzzleId = 7;

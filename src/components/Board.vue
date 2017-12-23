@@ -14,7 +14,6 @@
 
         <div id="badgeWrap">
             <span @click="exitGame" class="exit-game-button badge badge-light">Exit Game</span>
-            <span @click="loadGame(0)" class="exit-game-button badge badge-light">load Game</span>
             <span @click="saveGame" class="badge badge-light">Save Game</span>
             <span class="badge badge-light">Puzzle {{ activePuzzleId }}</span>
             <board-clock v-bind:userWonGame="userWonGame"/>
@@ -38,14 +37,18 @@ export default {
   created(){
       var self = this;
       
-      if(self.methodCall === 'buildBoardByPuzzleId'){
-            self.buildBoardByPuzzleId();
+      if(this.$route.params.activePuzzleId){
+          let activePuzzleId = this.$route.params.activePuzzleId;
+          this.buildBoardByPuzzleId(activePuzzleId);
+      }
+      
+      if(this.$route.params.loadGameId){
+          this.loadGame(this.$route.params.loadGameId);
       }
       
       if(self.methodCall === 'mockOneFieldToVictory'){
             self.mockOneFieldToVictory();
       }
-      
 
       this.$on('udpateFieldsTillVictory',function(){
           self.udpateFieldsTillVictory();
@@ -53,9 +56,8 @@ export default {
        
     },    
   methods: {
-    buildBoardByPuzzleId(){
-
-        FieldsStore.buildCompleteFieldsForBoard(this.activePuzzleId);
+    buildBoardByPuzzleId(activePuzzleId){
+        this.$FieldsStore.buildCompleteFieldsForBoard(activePuzzleId);
         this.udpateFieldsTillVictory();
     },
     userAchievedVictory(){
@@ -69,7 +71,7 @@ export default {
                 fieldsSolvedByUser++;
             }
         })
-        self.fieldsTillVictory = 81 - (FieldsStore.unsolvedFieldsInGrid + fieldsSolvedByUser);
+        self.fieldsTillVictory = 81 - (self.$FieldsStore.unsolvedFieldsInGrid + fieldsSolvedByUser);
         
         if(self.fieldsTillVictory === 0){
             self.userAchievedVictory();
@@ -77,8 +79,18 @@ export default {
     },
     exitGame(){
         EventBus.$emit('stopClock');
-        EventBus.$emit('activeComponent', 'Start');
-    },      
+        this.$router.push({ path: '/' });
+    },
+    saveGame(){
+        
+    },
+    loadGame(id){
+        let gameData = this.$GamesStore.loadGame(id);
+        console.log(gameData);
+        this.$FieldsStore.buildCompleteFieldsForBoard(gameData.activePuzzleId);
+        this.$FieldsStore.setUserNumbersFromString(gameData.userNumbersString);
+        this.activePuzzleId = gameData.activePuzzleId;
+    },
     /**
     * Mock field for an almost game
     */
@@ -87,12 +99,12 @@ export default {
         this.buildBoardByPuzzleId();
         
         let oneFieldFound = false;
-        for(let i = 1; i < FieldsStore.fields.length; i++){
+        for(let i = 1; i < self.$FieldsStore.fields.length; i++){
             // skip this field so we have exactly one field without solution
-            if(FieldsStore.fields[i].isUserInput === true && oneFieldFound === false){
+            if(self.$FieldsStore.fields[i].isUserInput === true && oneFieldFound === false){
                 oneFieldFound = true;
             } else {
-                let tempField = FieldsStore.fields[i];
+                let tempField = self.$FieldsStore.fields[i];
                 tempField.userNumber = parseInt(tempField['solution']);
                 this.$set(FieldsStore.fields, i, tempField);
             }
@@ -102,11 +114,11 @@ export default {
   components : {
       BoardClock, BoardNumberSelector, BoardSolved, BoardUserNumberInput
   },
-  props : ['methodCall', 'activePuzzleId'],
   data () {
     return {
-      fields : FieldsStore.fields,
-      peerMatrix : FieldsStore.peerMatrix,
+      activePuzzleId : this.$FieldsStore.activePuzzleId,
+      fields : this.$FieldsStore.fields,
+      peerMatrix : this.$FieldsStore.peerMatrix,
       fieldsTillVictory : 0,
       userWonGame : false,
       showNumberSelector : false

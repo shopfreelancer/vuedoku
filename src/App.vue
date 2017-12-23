@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <component :is="activeComponent" v-bind:methodCall="methodCall" v-bind:activePuzzleId="activePuzzleId"></component>
+    <router-view/>
   </div>
 </template>
 
@@ -16,23 +16,7 @@ import {FieldsStore} from './stores/FieldsStore.js'
     
 export default {
     name: 'app',
-    components : {Start, Board},
-    created: function() {
-          var self = this;
-        
-          EventBus.$on("activeComponent", function (activeComponent,methodCall,activePuzzleId) {
-              self.activeComponent = activeComponent;
-              self.methodCall = methodCall;
-              self.activePuzzleId = activePuzzleId;
-          });
-    },
-    data: function () {
-        return {
-            activeComponent: 'Start',
-            methodCall : '',
-            activePuzzleId : ''
-        }
-    }
+    components : {Start, Board}
 }
 </script>
 

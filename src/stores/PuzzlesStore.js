@@ -2,7 +2,7 @@ import Vue from 'vue'
 import {EventBus} from '../event-bus.js';
 import {RandomIntMixin} from '../mixins/randomInt.js';
 import {PuzzlesFileParser} from "./PuzzlesFileParser.js"
-//import PuzzlesDataJson from '../../static/data/sudoku.json';
+import PuzzlesDataJson from '../../static/data/sudoku.json';
 
 const PuzzlesStore = new Vue({
     data: {
@@ -10,10 +10,13 @@ const PuzzlesStore = new Vue({
     },
     created() {
         var self = this;
+        this.puzzles = PuzzlesDataJson;
+        /*
         EventBus.$on("puzzleDataParsed",function(){
             let puzzles = PuzzlesFileParser.puzzles;
             self.setPuzzles(puzzles);
         });
+        */
     },
     methods: {
         getRandomPuzzleId(){
