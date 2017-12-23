@@ -14,6 +14,7 @@
 
         <div id="badgeWrap">
             <span @click="exitGame" class="exit-game-button badge badge-light">Exit Game</span>
+            <span @click="loadGame(0)" class="exit-game-button badge badge-light">load Game</span>
             <span @click="saveGame" class="badge badge-light">Save Game</span>
             <span class="badge badge-light">Puzzle {{ activePuzzleId }}</span>
             <board-clock v-bind:userWonGame="userWonGame"/>
@@ -31,7 +32,6 @@ import BoardClock from '@/components/BoardClock'
 import BoardNumberSelector from '@/components/BoardNumberSelector'
 import BoardSolved from '@/components/BoardSolved'
 import BoardUserNumberInput from '@/components/BoardUserNumberInput'
-import {FieldsStore} from '../stores/FieldsStore.js'
 
 export default {
   name: 'Board',
@@ -50,19 +50,13 @@ export default {
       this.$on('udpateFieldsTillVictory',function(){
           self.udpateFieldsTillVictory();
       });
-      
+       
     },    
   methods: {
     buildBoardByPuzzleId(){
 
         FieldsStore.buildCompleteFieldsForBoard(this.activePuzzleId);
-        
         this.udpateFieldsTillVictory();
-    },
-    saveGame(){
-        // how to get the clock from child?
-        FieldsStore.saveGame();
-        
     },
     userAchievedVictory(){
         this.userWonGame = true;
@@ -82,6 +76,7 @@ export default {
         }
     },
     exitGame(){
+        EventBus.$emit('stopClock');
         EventBus.$emit('activeComponent', 'Start');
     },      
     /**
@@ -102,9 +97,6 @@ export default {
                 this.$set(FieldsStore.fields, i, tempField);
             }
         }
-    },
-    exitGame(){
-        EventBus.$emit('activeComponent', 'Start');
     }
   },
   components : {

@@ -2,7 +2,7 @@ import Vue from 'vue'
 import {EventBus} from '../event-bus.js';
 import {RandomIntMixin} from '../mixins/randomInt.js';
 
-export const FieldsStore = new Vue({
+const FieldsStore = new Vue({
     created() {
         this.resetStore();
     },   
@@ -154,10 +154,31 @@ export const FieldsStore = new Vue({
                 field.solution = parseInt(self.activePuzzle['solution'][index]);
             })
         },  
-        saveGame(){
-            let data = this.fields;
-            localStorage.setItem( "game", JSON.stringify( data ) );
-        },    
+        /**
+        * We use the same format of a string with 81 chars to save the game data
+        */
+        getUserNumbersString(){
+            let userNumbersString = '';
+            this.fields.forEach(function(field){
+                
+                if(field.isUserInput && field.userNumber != ""){
+                   userNumbersString += field.userNumber;
+                } else {
+                    userNumbersString += "0";
+                }
+            })
+            return userNumbersString;
+        },
+        setUserNumbersFromString(userNumbersString){
+            if(userNumbersString.length !== 81){
+                return false;
+            }
+            this.fields.forEach(function(field,index){
+                if(field.isUserInput && parseInt(userNumbersString[index]) !== 0){
+                    field.userNumber = parseInt(userNumbersString[index]);
+                }
+            })
+        }
     },
     data: {
         fields : [],
@@ -171,3 +192,11 @@ export const FieldsStore = new Vue({
         unsolvedFieldsInGrid : 0
     },
 })
+Object.defineProperties(Vue.prototype, {
+  $FieldsStore: {
+    get: function () {
+      return FieldsStore
+    }
+  }
+})
+export {FieldsStore}

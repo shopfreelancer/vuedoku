@@ -7,15 +7,19 @@
             <button @click="randomGame" class="btn btn-success">Start Random Puzzle</button>
             <button @click="mockOneFieldToVictory" class="btn btn-success">Mock almost won game</button>
             
+            <show-save-games/>
         </div>
     </div>   
 </template>
 
 <script>
-import {EventBus} from '../event-bus.js';    
+import {EventBus} from '../event-bus.js'; 
+import ShowSaveGames from '@/components/ShowSaveGames';
+    
 export default {
   name: 'Start',
   props : ['activeComponent'],
+  components : {ShowSaveGames},
   methods: {
     randomGame(){
         let randomPuzzleId = this.$PuzzlesStore.getRandomPuzzleId();
@@ -24,7 +28,7 @@ export default {
     mockOneFieldToVictory(){
         let activePuzzleId = 7;
         EventBus.$emit('activeComponent', 'Board', 'mockOneFieldToVictory', activePuzzleId);
-    }
+    },
   }
 }
 </script>

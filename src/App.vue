@@ -8,7 +8,11 @@
 import Start from '@/components/Start'
 import Board from '@/components/Board'
 import {EventBus} from './event-bus.js'; 
-import {PuzzlesStore} from './stores/PuzzlesStore.js';  
+
+// import global stores
+import {PuzzlesStore} from './stores/PuzzlesStore.js';
+import {GamesStore} from './stores/GamesStore.js'; 
+import {FieldsStore} from './stores/FieldsStore.js'
     
 export default {
     name: 'app',

@@ -13,6 +13,10 @@ export default {
   created(){
       var self = this;
       self.clockIterval = setInterval(self.setClock, 1000);
+      
+      EventBus.$on('stopClock', function(){
+          self.resetClock();
+      });
   },
   watch: {
         /**
@@ -29,6 +33,14 @@ export default {
         }
   },     
   methods: {
+     resetClock(){
+         clearInterval(this.clockIterval);
+         
+         this.clock.hours = 0;
+         this.clock.minutes = 0;
+         this.clock.seconds = 0;
+         this.clock.secondsFormated = "00";
+     },
      setClock(){
          if(this.clock.seconds < 60){
              this.clock.seconds += 1;
@@ -42,6 +54,8 @@ export default {
              this.clock.minutes = 0;
          }
          this.formatSecondsForDisplay();
+         
+         EventBus.$emit("currentClock",this.getClockAsString());
      },
      /**
      * Format seconds as double digit string
